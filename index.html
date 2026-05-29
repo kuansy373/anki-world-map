@@ -2,14 +2,29 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anki World Map</title>
+
+  <!-- MapLibre GL CSS -->
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css">
+
+  <!-- 自前のCSS（ステップ2以降で作る） -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div id="bm-worldmap" style="width:100%;height:100vh;"></div>
 
-  <!-- データを先に読み込む -->
+  <!-- 地図を表示するコンテナ -->
+  <div id="bm-worldmap"></div>
+
+  <!-- 外部ライブラリ -->
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+  <!-- データ（先に読み込む） -->
   <script src="data/regions.js"></script>
-  <!-- メインのロジック -->
+
+  <!-- ロジック（後で分割していく） -->
   <script src="js/main.js"></script>
+
 </body>
 </html>
