@@ -12,8 +12,7 @@ const map = new maplibregl.Map({
   },
   center: [0, 20],
   zoom: 1,
-  attributionControl: false,
-  projection: 'globe'
+  attributionControl: false
 });
 
 map.doubleClickZoom.disable();
@@ -408,7 +407,7 @@ function updateProgress() {
 // ============================================================
 
 map.on('style.load', () => {
-  map.setProjection({ type: 'globe' });
+  map.setProjection({ type: 'mercator' });
 });
 
 map.on('load', function () {
