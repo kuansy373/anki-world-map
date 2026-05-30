@@ -1,6 +1,6 @@
-// ============================================================
+// ==================
 // 定数・状態管理
-// ============================================================
+// ==================
 
 const map = new maplibregl.Map({
   container: 'bm-worldmap',
@@ -34,9 +34,9 @@ const expandedLists = {};
 // ハイライトされた経線・緯線の管理 Map: key=uniqueId, value={ layerId, sourceId, degree }
 const highlightedLines = new Map();
 
-// ============================================================
+// ==================
 // DOM参照
-// ============================================================
+// ==================
 
 const mapContainer    = document.getElementById('bm-worldmap');
 const menuToggle    = document.getElementById('menu-toggle');
@@ -51,9 +51,9 @@ const searchInput     = document.getElementById('search-input');
 const clearButton     = document.getElementById('clear-button');
 const progressDisplay = document.getElementById('progress-display');
 
-// ============================================================
+// ==================
 // ユーティリティ関数
-// ============================================================
+// ==================
 
 /** 文字列を正規化（前後空白除去・小文字化） */
 function normalize(name) {
@@ -103,9 +103,9 @@ function findFeatureByName(name, sources = LAYER_ORDER) {
   return null;
 }
 
-// ============================================================
+// ==================
 // 色塗り操作
-// ============================================================
+// ==================
 
 /** フィーチャに色を塗り、filledFeatures に登録する */
 function fillFeature(key, featureId, color) {
@@ -132,9 +132,9 @@ function applyToRegionFeatures(region, callback) {
   });
 }
 
-// ============================================================
+// ==================
 // マップ操作
-// ============================================================
+// ==================
 
 /** 座標を 0–360° 系にシフトする補助関数 */
 function shiftGeometry(coords, type) {
@@ -192,9 +192,9 @@ function reorderLayers() {
   });
 }
 
-// ============================================================
+// ==================
 // GeoJSONロード
-// ============================================================
+// ==================
 
 function loadLayer(key, url) {
   fetch(url)
@@ -232,9 +232,9 @@ function loadLayer(key, url) {
     .catch(err => console.error('GeoJSON load failed for', key, err));
 }
 
-// ============================================================
+// ==================
 // 経線・緯線
-// ============================================================
+// ==================
 
 function generateMeridiansParallels() {
   const meridians = { type: 'FeatureCollection', features: [] };
@@ -271,9 +271,9 @@ function addGridLayers(gridData) {
   });
 }
 
-// ============================================================
+// ==================
 // 進捗表示
-// ============================================================
+// ==================
 
 function updateProgress() {
   // 各リストのスクロール位置を保存
@@ -402,9 +402,9 @@ function updateProgress() {
   });
 }
 
-// ============================================================
+// ==================
 // マップロード
-// ============================================================
+// ==================
 
 map.on('style.load', () => {
   map.setProjection({ type: 'mercator' });
@@ -521,9 +521,9 @@ map.on('load', function () {
   });
 });
 
-// ============================================================
+// ==================
 // レイヤーコントロール UI
-// ============================================================
+// ==================
 
 // GeoJSON レイヤーのチェックボックス
 LAYER_ORDER.forEach(key => {
@@ -546,9 +546,9 @@ LAYER_ORDER.forEach(key => {
   });
 });
 
-// ============================================================
+// ==================
 // 地域コントロール UI
-// ============================================================
+// ==================
 
 Object.entries(regionColors).forEach(([region, color]) => {
   const regionItem = document.createElement('div');
@@ -590,9 +590,9 @@ Object.entries(regionColors).forEach(([region, color]) => {
   regionControl.appendChild(regionItem);
 });
 
-// ============================================================
+// ==================
 // メニュー開閉
-// ============================================================
+// ==================
 
 function closeAllPanels() {
   mapsPanel.style.display = 'none';
@@ -630,9 +630,9 @@ mapsPanel.addEventListener('click', e => e.stopPropagation());
 layersPanel.addEventListener('click', e => e.stopPropagation());
 regionControl.addEventListener('click', e => e.stopPropagation());
 
-// ============================================================
+// ==================
 // 図法切り替え
-// ============================================================
+// ==================
 
 document.querySelectorAll('input[name="projection"]').forEach(radio => {
   radio.addEventListener('change', e => {
@@ -644,9 +644,9 @@ document.querySelectorAll('input[name="projection"]').forEach(radio => {
   });
 });
 
-// ============================================================
+// ==================
 // 検索・クリアボタン
-// ============================================================
+// ==================
 
 searchInput.addEventListener('input', updateProgress);
 
