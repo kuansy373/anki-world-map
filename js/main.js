@@ -12,7 +12,8 @@ const map = new maplibregl.Map({
   },
   center: [0, 20],
   zoom: 1,
-  attributionControl: false
+  attributionControl: false,
+  projection: 'globe'
 });
 
 map.doubleClickZoom.disable();
@@ -39,11 +40,13 @@ const highlightedLines = new Map();
 // ============================================================
 
 const mapContainer    = document.getElementById('bm-worldmap');
-const mapBtnContainer = document.getElementById('map-btn-container');
-const mapButton       = document.getElementById('map-button');
-const layerControl    = document.getElementById('layer-control');
-const regionBtnContainer = document.getElementById('region-btn-container');
-const regionButton    = document.getElementById('region-button');
+const menuToggle    = document.getElementById('menu-toggle');
+const menuButtons   = document.getElementById('menu-buttons');
+const btnMaps       = document.getElementById('btn-maps');
+const btnLayers     = document.getElementById('btn-layers');
+const btnRegions    = document.getElementById('btn-regions');
+const mapsPanel     = document.getElementById('maps-panel');
+const layersPanel   = document.getElementById('layers-panel');
 const regionControl   = document.getElementById('region-control');
 const searchInput     = document.getElementById('search-input');
 const clearButton     = document.getElementById('clear-button');
@@ -120,9 +123,9 @@ function clearFeature(key, featureId) {
 /** ある地域に属する全フィーチャに対して操作を行う共通処理 */
 function applyToRegionFeatures(region, callback) {
   LAYER_ORDER.forEach(key => {
-    const source = map.getSource(key);
-    if (!source) return;
-    source._data.features.forEach(f => {
+    const data = geojsonData[key];
+    if (!data?.features) return;
+    data.features.forEach(f => {
       if (getRegion(f.properties) !== region) return;
       const fId = getFeatureId(key, f);
       if (fId) callback(key, fId, f);
@@ -404,6 +407,10 @@ function updateProgress() {
 // マップロード
 // ============================================================
 
+map.on('style.load', () => {
+  map.setProjection({ type: 'globe' });
+});
+
 map.on('load', function () {
   // GeoJSONレイヤーのロード
   LAYER_ORDER.forEach(key => loadLayer(key, geoUrls[key]));
@@ -439,7 +446,7 @@ map.on('load', function () {
               <div class="popup-name">${name}</div>
               <div class="popup-region">
                 <span>${region}</span>
-                <button id="resetColorBtn" class="popup-reset-btn">↵</button>
+                <button id="resetColorBtn" class="popup-reset-btn"></button>
               </div>
             </div>
           `)
@@ -521,7 +528,7 @@ map.on('load', function () {
 
 // GeoJSON レイヤーのチェックボックス
 LAYER_ORDER.forEach(key => {
-  const cb = layerControl.querySelector(`#layer_${key}`);
+  const cb = layersPanel.querySelector(`#layer_${key}`);
   cb?.addEventListener('change', e => {
     setLayerVisibility(key, e.target.checked);
     reorderLayers();
@@ -530,7 +537,7 @@ LAYER_ORDER.forEach(key => {
 
 // 経線・緯線のチェックボックス
 ['meridians', 'parallels'].forEach(key => {
-  const cb = layerControl.querySelector(`#layer_${key}`);
+  const cb = layersPanel.querySelector(`#layer_${key}`);
   cb?.addEventListener('change', e => {
     const visibility = e.target.checked ? 'visible' : 'none';
     if (map.getLayer(`${key}-line`)) {
@@ -538,14 +545,6 @@ LAYER_ORDER.forEach(key => {
       map.setLayoutProperty(`${key}-line-hitarea`, 'visibility', visibility);
     }
   });
-});
-
-// マップボタン：レイヤーコントロールの開閉
-mapButton.addEventListener('click', e => {
-  e.stopPropagation();
-  const isOpen = layerControl.style.display !== 'none';
-  layerControl.style.display = isOpen ? 'none' : 'block';
-  regionBtnContainer.style.top = isOpen ? '55px' : `${20 + mapBtnContainer.offsetHeight + 5}px`;
 });
 
 // ============================================================
@@ -564,7 +563,6 @@ Object.entries(regionColors).forEach(([region, color]) => {
   label.textContent = region;
 
   const resetBtn = document.createElement('button');
-  resetBtn.textContent = '↵';
   resetBtn.className = 'reset-btn';
 
   // 色ボックスクリック：地域全体を塗りつぶす
@@ -593,10 +591,58 @@ Object.entries(regionColors).forEach(([region, color]) => {
   regionControl.appendChild(regionItem);
 });
 
-// 地域ボタン：地域コントロールの開閉
-regionButton.addEventListener('click', e => {
+// ============================================================
+// メニュー開閉
+// ============================================================
+
+function closeAllPanels() {
+  mapsPanel.style.display = 'none';
+  layersPanel.style.display = 'none';
+  regionControl.style.display = 'none';
+  [btnMaps, btnLayers, btnRegions].forEach(b => b.classList.remove('active'));
+}
+
+function togglePanel(panel, btn) {
+  const isOpen = panel.style.display !== 'none';
+  closeAllPanels();
+  if (!isOpen) {
+    panel.style.display = 'block';
+    btn.classList.add('active');
+  }
+}
+
+menuToggle.addEventListener('click', e => {
   e.stopPropagation();
-  regionControl.style.display = regionControl.style.display === 'none' ? 'block' : 'none';
+  const isOpen = menuButtons.style.display !== 'none';
+  menuButtons.style.display = isOpen ? 'none' : 'flex';
+  if (isOpen) closeAllPanels();
+});
+
+btnMaps.addEventListener('click', e => { e.stopPropagation(); togglePanel(mapsPanel, btnMaps); });
+btnLayers.addEventListener('click', e => { e.stopPropagation(); togglePanel(layersPanel, btnLayers); });
+btnRegions.addEventListener('click', e => { e.stopPropagation(); togglePanel(regionControl, btnRegions); });
+
+document.addEventListener('click', () => {
+  menuButtons.style.display = 'none';
+  closeAllPanels();
+});
+
+mapsPanel.addEventListener('click', e => e.stopPropagation());
+layersPanel.addEventListener('click', e => e.stopPropagation());
+regionControl.addEventListener('click', e => e.stopPropagation());
+
+// ============================================================
+// 図法切り替え
+// ============================================================
+
+document.querySelectorAll('input[name="projection"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    if (e.target.value === 'globe') {
+      map.setProjection({ type: 'globe' });
+    } else {
+      map.setProjection({ type: 'mercator' });
+    }
+  });
 });
 
 // ============================================================
@@ -609,27 +655,3 @@ clearButton.addEventListener('click', () => {
   searchInput.value = '';
   updateProgress();
 });
-
-// ============================================================
-// グローバルクリック（アコーディオンを閉じる）
-// ============================================================
-
-document.addEventListener('click', () => {
-  layerControl.style.display = 'none';
-  regionControl.style.display = 'none';
-  regionBtnContainer.style.top = '55px';
-});
-
-// アコーディオン自身のクリックで閉じないようにする
-layerControl.addEventListener('click', e => e.stopPropagation());
-regionControl.addEventListener('click', e => e.stopPropagation());
-
-// ============================================================
-// DOM組み立て
-// ============================================================
-
-mapBtnContainer.append(mapButton, layerControl);
-mapContainer.appendChild(mapBtnContainer);
-
-regionBtnContainer.append(regionButton, regionControl);
-mapContainer.appendChild(regionBtnContainer);

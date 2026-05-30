@@ -52,9 +52,6 @@ body {
   line-height: 1;
   color: #666;
 }
-.clear-button:hover {
-  background: #e0e0e0;
-}
 
 /* 進捗表示 */
 .progress-display {
@@ -128,17 +125,16 @@ body {
   height: 16px;
   margin-right: 6px;
   border: 1px solid #333;
+  border-radius: 2px;
 }
 
 /* リセットボタン */
 .reset-btn {
-  all: initial;
   margin-left: 6px;
-  padding-inline: 4px;
-  font-size: 13px;
-  background: white;
-  color: #979797;
+  background: #eaeaea;
   border: 1px solid #c3c3c3;
+  height: 16px;
+  width: 16px;
   cursor: pointer;
 }
 
@@ -213,7 +209,70 @@ body {
 }
 
 .popup-reset-btn {
-  padding: 0px 3px;
+  padding: 0px;
   margin-left: 5px;
-  font-size: 12px;
+  height: 16px;
+  width: 16px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+#menu-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+}
+
+#menu-toggle {
+  padding: 4px 8px;
+  background: #fff;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+#menu-buttons {
+  display: flex;
+  flex-direction: row;
+  margin-top: 4px;
+  gap: 4px;
+}
+
+#menu-buttons button {
+  padding: 4px 8px;
+  background: #fff;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+}
+
+#menu-buttons button.active {
+  background: #e8e8e8;
+  border-color: #999;
+}
+
+.menu-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  min-width: 150px;
 }

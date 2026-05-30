@@ -6,7 +6,7 @@
   <title>Anki World Map</title>
 
   <!-- MapLibre GL CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
 
   <!-- 自前のCSS（ステップ2以降で作る） -->
   <link rel="stylesheet" href="css/style.css">
@@ -25,26 +25,37 @@
     <div id="progress-display" class="progress-display"></div>
   </div>
 
-  <!-- Mapsボタン -->
-  <div class="map-btn-container" id="map-btn-container">
-    <button id="map-button" class="map-button">Maps</button>
-    <div id="layer-control" class="layer-control">
+  <!-- メニュー -->
+  <div id="menu-container">
+    <button id="menu-toggle">☰</button>
+    <div id="menu-buttons" style="display:none;">
+      <button id="btn-maps">Maps</button>
+      <button id="btn-layers">Layers</button>
+      <button id="btn-regions">Regions</button>
+    </div>
+
+    <!-- パネルをmenu-containerの中に移動 -->
+    <div id="maps-panel" class="menu-panel" style="display:none;">
+      <label><input type="radio" name="projection" value="mercator" checked> Mercator</label><br>
+      <label><input type="radio" name="projection" value="globe"> Globe</label>
+    </div>
+
+    <div id="layers-panel" class="menu-panel" style="display:none;">
       <label><input type="checkbox" id="layer_world" checked> World</label><br>
       <label><input type="checkbox" id="layer_capitals"> Capitals</label><br>
       <label><input type="checkbox" id="layer_usaStates"> USA States</label><br>
       <label><input type="checkbox" id="layer_meridians"> Meridians</label><br>
       <label><input type="checkbox" id="layer_parallels"> Parallels</label>
     </div>
+
+    <div id="region-control" class="menu-panel" style="display:none;"></div>
   </div>
 
-  <!-- Regionsボタン -->
-  <div class="region-btn-container" id="region-btn-container">
-    <button id="region-button" class="region-button">Regions</button>
-    <div id="region-control" class="region-control"></div>
-  </div>
+  <!-- Regionsパネル -->
+  <div id="region-control" class="menu-panel" style="display:none;"></div>
 
   <!-- 外部ライブラリ -->
-  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
   <!-- データ（先に読み込む） -->

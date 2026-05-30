@@ -13,7 +13,7 @@ const regionColors = {
   Oceania: '#dc7550',
   'North America': '#b3ce62',
   'South America': '#a3d3d8',
-  Antarctica: '#a5dce9',
+  Antarctica: '#a7b5ff',
   Capitals: '#ff0000',
   'USA States': '#b3ce62',
   Default: '#000000'
