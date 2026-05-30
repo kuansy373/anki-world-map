@@ -16,6 +16,33 @@
   <!-- 地図を表示するコンテナ -->
   <div id="bm-worldmap"></div>
 
+  <!-- 検索ボックス -->
+  <div class="search-container">
+    <div class="search-wrapper">
+      <input type="text" id="search-input" class="search-input" placeholder="Type region names...">
+      <button id="clear-button" class="clear-button">✕</button>
+    </div>
+    <div id="progress-display" class="progress-display"></div>
+  </div>
+
+  <!-- Mapsボタン -->
+  <div class="map-btn-container" id="map-btn-container">
+    <button id="map-button" class="map-button">Maps</button>
+    <div id="layer-control" class="layer-control">
+      <label><input type="checkbox" id="layer_world" checked> World</label><br>
+      <label><input type="checkbox" id="layer_capitals"> Capitals</label><br>
+      <label><input type="checkbox" id="layer_usaStates"> USA States</label><br>
+      <label><input type="checkbox" id="layer_meridians"> Meridians</label><br>
+      <label><input type="checkbox" id="layer_parallels"> Parallels</label>
+    </div>
+  </div>
+
+  <!-- Regionsボタン -->
+  <div class="region-btn-container" id="region-btn-container">
+    <button id="region-button" class="region-button">Regions</button>
+    <div id="region-control" class="region-control"></div>
+  </div>
+
   <!-- 外部ライブラリ -->
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
