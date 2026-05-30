@@ -54,75 +54,33 @@ function getRegion(properties) {
 
 // 検索ボックスとプログレス表示エリア
 var searchContainer = document.createElement('div');
-Object.assign(searchContainer.style, {
-  position: 'absolute',
-  top: '10px',
-  right: '10px',
-  zIndex: 1000,
-  background: 'white',
-  padding: '10px',
-  borderRadius: '4px',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-  minWidth: '200px'
-});
+searchContainer.className = 'search-container';
 mapContainer.appendChild(searchContainer);
 
 // 検索ボックスのラッパー（相対配置用）
 var searchWrapper = document.createElement('div');
-Object.assign(searchWrapper.style, {
-  position: 'relative',
-  width: '100%'
-});
+searchWrapper.className = 'search-wrapper';
 searchContainer.appendChild(searchWrapper);
 
 var searchInput = document.createElement('input');
 searchInput.type = 'text';
 searchInput.placeholder = 'Type region names...';
-Object.assign(searchInput.style, {
-  width: '100%',
-  padding: '5px 30px 5px 5px',
-  border: '1px solid #aaa',
-  borderRadius: '3px',
-  fontSize: '14px',
-  boxSizing: 'border-box'
-});
+searchInput.className = 'search-input';
 searchWrapper.appendChild(searchInput);
 
 // クリアボタン（入力欄内部の右端）
 var clearButton = document.createElement('button');
 clearButton.textContent = '✕';
-Object.assign(clearButton.style, {
-  position: 'absolute',
-  right: '5px',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  padding: '2px 6px',
-  border: 'none',
-  borderRadius: '3px',
-  background: 'transparent',
-  cursor: 'pointer',
-  fontSize: '16px',
-  lineHeight: '1',
-  color: '#666'
-});
-clearButton.addEventListener('mouseenter', function() {
-  this.style.background = '#e0e0e0';
-});
-clearButton.addEventListener('mouseleave', function() {
-  this.style.background = 'transparent';
-});
+clearButton.className = 'clear-button';
 clearButton.addEventListener('click', function() {
   searchInput.value = '';
   updateProgress();
-  searchInput.focus();
+  // searchInput.focus();
 });
 searchWrapper.appendChild(clearButton);
-
 var progressDisplay = document.createElement('div');
 progressDisplay.id = 'progress-display';
-Object.assign(progressDisplay.style, {
-  fontSize: '15px',
-});
+progressDisplay.className = 'progress-display';
 searchContainer.appendChild(progressDisplay);
 
 // 国リストの開閉状態を保持
@@ -253,15 +211,15 @@ function updateProgress() {
     var unfilledCountries = countryList.filter(c => !c.filled);
 
     html += `
-      <div style="margin-bottom:3px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
+      <div class="region-progress-wrapper">
+        <div class="region-progress-header">
           <div class="region-progress" data-region="${region}" style="cursor:${unfilledCountries.length > 0 ? 'pointer' : 'default'};">
-            <div style="font-weight:600; color:${color};">${region}</div>
-            <div style="color:#555; font-size:13px;">${filledCount} / ${totalCount}</div>
+            <div class="region-progress-name" style="color:${color};">${region}</div>
+            <div class="region-progress-count">${filledCount} / ${totalCount}</div>
           </div>
-          <button class="toggle-list-btn" data-target="${listId}" data-region="${region}" style="background:none; border:none; cursor:pointer; font-size:16px; height:40px; padding:4px 8px 4px 140px; margin-left:-140px;">${isExpanded ? '▲' : '▼'}</button>
+          <button class="toggle-list-btn" data-target="${listId}" data-region="${region}">${isExpanded ? '▲' : '▼'}</button>
         </div>
-        <div id="${listId}" style="display:${isExpanded ? 'block' : 'none'}; margin-top:5px; padding-left:10px; max-height:200px; overflow-y:auto; font-size:13px; line-height:1.6;">
+        <div id="${listId}" class="country-list" style="display:${isExpanded ? 'block' : 'none'};">
           ${countryList.map(country => {
             var countryColor = country.filled ? color : '#aaa';
             return `<div style="color:${countryColor};">${country.name}</div>`;
@@ -538,11 +496,11 @@ map.on('load', function() {
       } else {
         // すでに塗られている地物を再クリックしたとき
         var popupContent = `
-          <div style="font-size:12px;">
-            <div style="font-weight:600;">${name}</div>
-            <div style="display:flex; align-items:center; margin-top:2px; color:#555;">
+          <div class="popup-content">
+            <div class="popup-name">${name}</div>
+            <div class="popup-region">
               <span>${region}</span>
-              <button id="resetColorBtn" style="padding:0px 3px; margin-left:5px; font-size:12px;">↵</button>
+              <button id="resetColorBtn" class="popup-reset-btn">↵</button>
             </div>
           </div>
         `;
@@ -587,36 +545,16 @@ map.on('load', function() {
 
 // 地図ボタンの親コンテナ作成
 var mapBtnContainer = document.createElement('div');
-Object.assign(mapBtnContainer.style, {
-  position: 'absolute',
-  top: '20px',
-  left: '10px',
-  zIndex: 1
-});
+mapBtnContainer.className = 'map-btn-container';
 
 // 地図ボタン作成
 var mapButton = document.createElement('button');
 mapButton.innerHTML = 'Maps';
-Object.assign(mapButton.style, {
-  padding: '4px 8px',
-  background: '#fff',
-  border: '2px solid rgba(0,0,0,0.2)',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: '14px'
-});
+mapButton.className = 'map-button';
 
 // レイヤー切り替えUI（アコーディオン風）
 var layerControl = document.createElement('div');
-Object.assign(layerControl.style, {
-  display: 'none',
-  marginTop: '2px',
-  background: '#fff',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-  padding: '5px 10px',
-  borderRadius: '4px',
-  fontSize: '14px'
-});
+layerControl.className = 'layer-control';
 
 layerControl.innerHTML = `
   <label><input type="checkbox" id="layer_world" checked> World</label><br>
@@ -895,56 +833,26 @@ mapContainer.appendChild(mapBtnContainer);
 
 // 地域ボタンの親コンテナ作成
 var regionBtnContainer = document.createElement('div');
-Object.assign(regionBtnContainer.style, {
-  position: 'absolute',
-  top: '55px',
-  left: '10px',
-  zIndex: 1
-});
+regionBtnContainer.className = 'region-btn-container';
 
 // 地域ボタン作成
 var regionButton = document.createElement('button');
 regionButton.innerHTML = 'Regions';
-Object.assign(regionButton.style, {
-  padding: '4px 8px',
-  background: '#fff',
-  border: '2px solid rgba(0,0,0,0.2)',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: '14px'
-});
+regionButton.className = 'region-button';
 
-// 地域コントロールUI（アコーディオン風）
+// 地域コントロールUI（アコーディオン）
 var regionControl = document.createElement('div');
-Object.assign(regionControl.style, {
-  display: 'none',
-  marginTop: '2px',
-  background: '#fff',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-  padding: '4px',
-  borderRadius: '4px'
-});
+regionControl.className = 'region-control';
 
 // 地域リスト（カラー付き）生成
 Object.entries(regionColors).forEach(([region, color]) => {
-  var item = document.createElement('div');
-  Object.assign(item.style, {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '4px',
-    cursor: 'pointer'
-  });
+  var regionItem = document.createElement('div');
+  regionItem.className = 'region-item';
 
   // 色の四角
   var colorBox = document.createElement('span');
-  Object.assign(colorBox.style, {
-    display: 'inline-block',
-    width: '16px',
-    height: '16px',
-    background: color,
-    marginRight: '6px',
-    border: '1px solid #333'
-  });
+  colorBox.className = 'color-box';
+  colorBox.style.background = color;
 
   // ラベル
   var label = document.createElement('span');
@@ -953,16 +861,7 @@ Object.entries(regionColors).forEach(([region, color]) => {
   // リセットボタン
   var resetBtn = document.createElement('button');
   resetBtn.textContent = '↵';
-  Object.assign(resetBtn.style, {
-    all: 'initial',
-    marginLeft: '6px',
-    paddingInline: '4px 4px',
-    fontSize: '13px',
-    background: 'white',
-    color: '#979797',
-    border: '1px solid #c3c3c3',
-    cursor: 'pointer'
-  });
+  resetBtn.className = 'reset-btn';
 
   // 色ボックスクリックで色を適用
   colorBox.addEventListener('click', function(e) {
@@ -1034,10 +933,10 @@ Object.entries(regionColors).forEach(([region, color]) => {
     });
   });
 
-  item.appendChild(colorBox);
-  item.appendChild(label);
-  item.appendChild(resetBtn);
-  regionControl.appendChild(item);
+  regionItem.appendChild(colorBox);
+  regionItem.appendChild(label);
+  regionItem.appendChild(resetBtn);
+  regionControl.appendChild(regionItem);
 });
 
 // アコーディオン開閉
