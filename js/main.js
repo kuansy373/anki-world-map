@@ -50,6 +50,8 @@ const regionControl   = document.getElementById('region-control');
 const searchInput     = document.getElementById('search-input');
 const clearButton     = document.getElementById('clear-button');
 const progressDisplay = document.getElementById('progress-display');
+const searchToggle = document.getElementById('search-toggle');
+const searchContainer = document.getElementById('search-container');
 
 // ==================
 // ユーティリティ関数
@@ -594,11 +596,21 @@ Object.entries(regionColors).forEach(([region, color]) => {
 // メニュー開閉
 // ==================
 
+let activePanel = null;
+let activeBtn = null;
+
+const allPanels = [mapsPanel, layersPanel, regionControl];
+const allBtns   = [btnMaps, btnLayers, btnRegions];
+
+function hidePanels() {
+  allPanels.forEach(p => p.style.display = 'none');
+  allBtns.forEach(b => b.classList.remove('active'));
+}
+
 function closeAllPanels() {
-  mapsPanel.style.display = 'none';
-  layersPanel.style.display = 'none';
-  regionControl.style.display = 'none';
-  [btnMaps, btnLayers, btnRegions].forEach(b => b.classList.remove('active'));
+  hidePanels();
+  activePanel = null;
+  activeBtn = null;
 }
 
 function togglePanel(panel, btn) {
@@ -607,6 +619,8 @@ function togglePanel(panel, btn) {
   if (!isOpen) {
     panel.style.display = 'block';
     btn.classList.add('active');
+    activePanel = panel;
+    activeBtn = btn;
   }
 }
 
@@ -614,21 +628,24 @@ menuToggle.addEventListener('click', e => {
   e.stopPropagation();
   const isOpen = menuButtons.style.display !== 'none';
   menuButtons.style.display = isOpen ? 'none' : 'flex';
-  if (isOpen) closeAllPanels();
+  if (isOpen) {
+    hidePanels(); // 状態は保持
+  } else if (activePanel) {
+    activePanel.style.display = 'block';
+    activeBtn?.classList.add('active');
+  }
 });
 
-btnMaps.addEventListener('click', e => { e.stopPropagation(); togglePanel(mapsPanel, btnMaps); });
-btnLayers.addEventListener('click', e => { e.stopPropagation(); togglePanel(layersPanel, btnLayers); });
-btnRegions.addEventListener('click', e => { e.stopPropagation(); togglePanel(regionControl, btnRegions); });
+allBtns.forEach((btn, i) => {
+  btn.addEventListener('click', e => { e.stopPropagation(); togglePanel(allPanels[i], btn); });
+});
 
 document.addEventListener('click', () => {
   menuButtons.style.display = 'none';
-  closeAllPanels();
+  hidePanels(); // 状態は保持
 });
 
-mapsPanel.addEventListener('click', e => e.stopPropagation());
-layersPanel.addEventListener('click', e => e.stopPropagation());
-regionControl.addEventListener('click', e => e.stopPropagation());
+allPanels.forEach(p => p.addEventListener('click', e => e.stopPropagation()));
 
 // ==================
 // 図法切り替え
@@ -648,9 +665,14 @@ document.querySelectorAll('input[name="projection"]').forEach(radio => {
 // 検索・クリアボタン
 // ==================
 
+searchToggle.addEventListener('click', e => {
+  e.stopPropagation();
+  const isOpen = getComputedStyle(searchContainer).display !== 'none';
+  searchContainer.style.display = isOpen ? 'none' : 'block';
+});
+
 searchInput.addEventListener('input', updateProgress);
 
 clearButton.addEventListener('click', () => {
-  searchInput.value = '';
-  updateProgress();
+  searchContainer.style.display = 'none';
 });
