@@ -148,7 +148,7 @@ const countryRegions = {
 const regionView = {
   'Europe': { center: [14, 52], zoom: 2.7 },
   'Africa': { center: [17, 5], zoom: 2.4 },
-  'Middle East': { center: [54, 36], zoom: 2.7 },
+  'Middle East': { center: [50, 30], zoom: 2.7 },
   'Asia': { center: [105, 25], zoom: 2.5 },
   'Oceania': { center: [147, -25], zoom: 2.5 },
   'North America': { center: [-85, 25], zoom: 3 },
