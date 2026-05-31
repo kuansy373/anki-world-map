@@ -52,6 +52,8 @@ const clearButton     = document.getElementById('clear-button');
 const progressDisplay = document.getElementById('progress-display');
 const searchToggle = document.getElementById('search-toggle');
 const searchContainer = document.getElementById('search-container');
+const btnTheme   = document.getElementById('btn-theme');
+const themePanel = document.getElementById('theme-panel');
 
 // ==================
 // ユーティリティ関数
@@ -410,6 +412,12 @@ function updateProgress() {
 
 map.on('style.load', () => {
   map.setProjection({ type: 'mercator' });
+  map.addLayer({
+    id: 'background',
+    type: 'background',
+    paint: { 'background-color': themes.light.sea }
+  });
+  mapContainer.classList.add('theme-light');
 });
 
 map.on('load', function () {
@@ -593,14 +601,31 @@ Object.entries(regionColors).forEach(([region, color]) => {
 });
 
 // ==================
+// テーマコントロール UI
+// ==================
+
+function applyTheme(themeName) {
+  const theme = themes[themeName];
+  map.setPaintProperty('background', 'background-color', theme.sea);
+  mapContainer.classList.remove('theme-light', 'theme-dark');
+  mapContainer.classList.add(`theme-${themeName}`);
+}
+
+document.querySelectorAll('input[name="theme"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    applyTheme(e.target.value);
+  });
+});
+
+// ==================
 // メニュー開閉
 // ==================
 
 let activePanel = null;
 let activeBtn = null;
 
-const allPanels = [mapsPanel, layersPanel, regionControl];
-const allBtns   = [btnMaps, btnLayers, btnRegions];
+const allPanels = [mapsPanel, layersPanel, regionControl, themePanel];
+const allBtns   = [btnMaps, btnLayers, btnRegions, btnTheme];
 
 function hidePanels() {
   allPanels.forEach(p => p.style.display = 'none');

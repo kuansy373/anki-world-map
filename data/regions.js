@@ -4,6 +4,15 @@ const geoUrls = {
   capitals: 'https://raw.githubusercontent.com/kuansy373/bookmarklet-host/main/data/capitals.geojson'
 };
 
+const themes = {
+  light: {
+    sea: '#fff'
+  },
+  dark: {
+    sea: '#000'
+  }
+};
+
 // 地域別カラー設定
 const regionColors = {
   Europe: '#3ebbb6',

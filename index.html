@@ -34,6 +34,7 @@
       <button id="btn-maps">Maps</button>
       <button id="btn-layers">Layers</button>
       <button id="btn-regions">Regions</button>
+      <button id="btn-theme">Theme</button>
     </div>
 
     <!-- パネルをmenu-containerの中に移動 -->
@@ -51,6 +52,11 @@
     </div>
 
     <div id="region-control" class="menu-panel" style="display:none;"></div>
+
+    <div id="theme-panel" class="menu-panel" style="display:none;">
+      <label><input type="radio" name="theme" value="light" checked> Light</label><br>
+      <label><input type="radio" name="theme" value="dark"> Dark</label>
+    </div>
   </div>
 
   <!-- Regionsパネル -->
@@ -64,7 +70,7 @@
   <script src="data/regions.js"></script>
   <script src="data/subdivisions.js"></script>
 
-  <!-- ロジック（後で分割していく） -->
+  <!-- ロジック-->
   <script src="js/main.js"></script>
 
 </body>
