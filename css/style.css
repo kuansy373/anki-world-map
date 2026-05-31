@@ -55,9 +55,8 @@ body {
   box-sizing: border-box;
 }
 
-/* クリアボタン */
-.clear-button {
-  padding: 2px 6px;
+.close-button {
+  padding: 4px 10px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -70,39 +69,49 @@ body {
   font-size: 15px;
 }
 
+.region-progress-wrapper {
+  margin-bottom: 3px;
+}
+
+.region-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.region-progress-name {
+  font-weight: 600;
+}
+
+.region-progress-count {
+  color: #555;
+  font-size: 13px;
+}
+
+.toggle-list-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  height: 40px;
+  padding: 4px 8px 4px 140px;
+  margin-left: -140px;
+}
+
 .country-list {
+  margin-top: 5px;
+  padding-left: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
   scrollbar-width: thin;
 }
 
-/* Mapsボタンコンテナ */
-.map-btn-container {
-  position: absolute;
-  top: 20px;
-  left: 10px;
-  z-index: 1;
-}
 
-/* Mapsボタン、Regionsボタン共通 */
-.map-button,
-.region-button {
-  padding: 4px 8px;
-  background: #fff;
-  border: 2px solid rgba(0,0,0,0.2);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
 
-/* レイヤーコントロール */
-.layer-control {
-  display: none;
-  margin-top: 2px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 14px;
-}
+
 
 /* Regionsボタンコンテナ */
 .region-btn-container {
@@ -157,58 +166,6 @@ body {
 
 
 
-
-
-
-
-
-.region-progress-wrapper {
-  margin-bottom: 3px;
-}
-
-.region-progress-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-}
-
-.region-progress-name {
-  font-weight: 600;
-}
-
-.region-progress-count {
-  color: #555;
-  font-size: 13px;
-}
-
-.toggle-list-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  height: 40px;
-  padding: 4px 8px 4px 140px;
-  margin-left: -140px;
-}
-
-.country-list {
-  margin-top: 5px;
-  padding-left: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-
-
-
-
-
-
-
-
 .popup-content {
   font-size: 12px;
 }
@@ -242,13 +199,6 @@ body {
 
 
 
-#menu-container {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-}
-
 #menu-toggle {
   height: 36px;
   width: 36px;
@@ -259,6 +209,26 @@ body {
   font-size: 18px;
 }
 
+#menu-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+}
+
+#menu-row1 {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+#menu-top {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
 #menu-buttons {
   display: flex;
   flex-direction: row;
@@ -266,6 +236,7 @@ body {
   gap: 4px;
 }
 
+#menu-top button,
 #menu-buttons button {
   padding: 4px 8px;
   background: #fff;
@@ -276,6 +247,7 @@ body {
   text-align: left;
 }
 
+#menu-top button.active,
 #menu-buttons button.active {
   background: #e8e8e8;
   border-color: #999;

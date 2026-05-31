@@ -22,27 +22,40 @@
   <div class="search-container" id="search-container">
     <div class="search-wrapper">
       <input type="text" id="search-input" class="search-input" placeholder="Type region names...">
-      <button id="clear-button" class="clear-button">✕</button>
+      <button id="close-button" class="close-button">✕</button>
     </div>
     <div id="progress-display" class="progress-display"></div>
   </div>
 
   <!-- メニュー -->
   <div id="menu-container">
-    <button id="menu-toggle">☰</button>
+    <div id="menu-row1">
+      <button id="menu-toggle">☰</button>
+      <div id="menu-all-buttons" style="display:none;">
+        <div id="menu-top">
+          <button id="btn-theme">Theme</button>
+          <button id="btn-language">Language</button>
+        </div>
+      </div>
+    </div>
     <div id="menu-buttons" style="display:none;">
       <button id="btn-maps">Maps</button>
       <button id="btn-layers">Layers</button>
       <button id="btn-regions">Regions</button>
-      <button id="btn-theme">Theme</button>
     </div>
 
-    <!-- パネルをmenu-containerの中に移動 -->
+    <!-- パネル -->
+    <div id="theme-panel" class="menu-panel" style="display:none;">
+      <label><input type="radio" name="theme" value="light" checked> Light</label><br>
+      <label><input type="radio" name="theme" value="dark"> Dark</label>
+    </div>
+    <div id="language-panel" class="menu-panel" style="display:none;">
+      <!-- 後で中身を追加 -->
+    </div>
     <div id="maps-panel" class="menu-panel" style="display:none;">
       <label><input type="radio" name="projection" value="mercator" checked> Mercator</label><br>
       <label><input type="radio" name="projection" value="globe"> Globe</label>
     </div>
-
     <div id="layers-panel" class="menu-panel" style="display:none;">
       <label><input type="checkbox" id="layer_world" checked> World</label><br>
       <label><input type="checkbox" id="layer_capitals"> Capitals</label><br>
@@ -50,13 +63,7 @@
       <label><input type="checkbox" id="layer_meridians"> Meridians</label><br>
       <label><input type="checkbox" id="layer_parallels"> Parallels</label>
     </div>
-
     <div id="region-control" class="menu-panel" style="display:none;"></div>
-
-    <div id="theme-panel" class="menu-panel" style="display:none;">
-      <label><input type="radio" name="theme" value="light" checked> Light</label><br>
-      <label><input type="radio" name="theme" value="dark"> Dark</label>
-    </div>
   </div>
 
   <!-- Regionsパネル -->

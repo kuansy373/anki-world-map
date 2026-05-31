@@ -40,20 +40,24 @@ const highlightedLines = new Map();
 
 const mapContainer    = document.getElementById('bm-worldmap');
 const menuToggle    = document.getElementById('menu-toggle');
-const menuButtons   = document.getElementById('menu-buttons');
-const btnMaps       = document.getElementById('btn-maps');
-const btnLayers     = document.getElementById('btn-layers');
-const btnRegions    = document.getElementById('btn-regions');
-const mapsPanel     = document.getElementById('maps-panel');
+const menuButtons = document.getElementById('menu-buttons');
+const menuAllButtons = document.getElementById('menu-all-buttons');
+const btnTheme   = document.getElementById('btn-theme');
+const themePanel = document.getElementById('theme-panel');
+const btnLanguage    = document.getElementById('btn-language');
+const languagePanel = document.getElementById('language-panel');
+const btnMaps = document.getElementById('btn-maps');
+const mapsPanel = document.getElementById('maps-panel');
+const btnLayers = document.getElementById('btn-layers');
 const layersPanel   = document.getElementById('layers-panel');
+const btnRegions    = document.getElementById('btn-regions');
 const regionControl   = document.getElementById('region-control');
 const searchInput     = document.getElementById('search-input');
-const clearButton     = document.getElementById('clear-button');
+const closeButton     = document.getElementById('close-button');
 const progressDisplay = document.getElementById('progress-display');
 const searchToggle = document.getElementById('search-toggle');
 const searchContainer = document.getElementById('search-container');
-const btnTheme   = document.getElementById('btn-theme');
-const themePanel = document.getElementById('theme-panel');
+
 
 // ==================
 // ユーティリティ関数
@@ -624,12 +628,19 @@ document.querySelectorAll('input[name="theme"]').forEach(radio => {
 let activePanel = null;
 let activeBtn = null;
 
-const allPanels = [mapsPanel, layersPanel, regionControl, themePanel];
-const allBtns   = [btnMaps, btnLayers, btnRegions, btnTheme];
+const menuItems = [
+  [btnTheme,    themePanel],
+  [btnLanguage, languagePanel],
+  [btnMaps,     mapsPanel],
+  [btnLayers,   layersPanel],
+  [btnRegions,  regionControl],
+];
 
 function hidePanels() {
-  allPanels.forEach(p => p.style.display = 'none');
-  allBtns.forEach(b => b.classList.remove('active'));
+  menuItems.forEach(([btn, panel]) => {
+    panel.style.display = 'none';
+    btn.classList.remove('active');
+  });
 }
 
 function closeAllPanels() {
@@ -651,26 +662,27 @@ function togglePanel(panel, btn) {
 
 menuToggle.addEventListener('click', e => {
   e.stopPropagation();
-  const isOpen = menuButtons.style.display !== 'none';
+  const isOpen = menuAllButtons.style.display !== 'none';
+  menuAllButtons.style.display = isOpen ? 'none' : 'flex';
   menuButtons.style.display = isOpen ? 'none' : 'flex';
   if (isOpen) {
-    hidePanels(); // 状態は保持
+    hidePanels();
   } else if (activePanel) {
     activePanel.style.display = 'block';
     activeBtn?.classList.add('active');
   }
 });
 
-allBtns.forEach((btn, i) => {
-  btn.addEventListener('click', e => { e.stopPropagation(); togglePanel(allPanels[i], btn); });
-});
-
 document.addEventListener('click', () => {
+  menuAllButtons.style.display = 'none';
   menuButtons.style.display = 'none';
-  hidePanels(); // 状態は保持
+  hidePanels();
 });
 
-allPanels.forEach(p => p.addEventListener('click', e => e.stopPropagation()));
+menuItems.forEach(([btn, panel]) => {
+  btn.addEventListener('click', e => { e.stopPropagation(); togglePanel(panel, btn); });
+  panel.addEventListener('click', e => e.stopPropagation());
+});
 
 // ==================
 // 図法切り替え
@@ -698,6 +710,7 @@ searchToggle.addEventListener('click', e => {
 
 searchInput.addEventListener('input', updateProgress);
 
-clearButton.addEventListener('click', () => {
+closeButton.addEventListener('click', (e) => {
+  e.stopPropagation();
   searchContainer.style.display = 'none';
 });
