@@ -1,15 +1,7 @@
 const geoUrls = {
   world: 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
   usaStates: 'https://raw.githubusercontent.com/datasets/geo-admin1-us/master/data/admin1-us.geojson',
-};
-
-const themes = {
-  light: {
-    sea: '#fff'
-  },
-  dark: {
-    sea: '#000'
-  }
+  chinaProvinces: 'https://unpkg.com/cn-atlas@0.1.2/provinces.json',
 };
 
 // 地域別カラー設定
@@ -24,7 +16,8 @@ const regionColors = {
   Antarctica: '#a7b5ff',
   // Capitals: '#ff0000',
   Default: '#000000',
-  'USA States': '#b3ce62',
+  'USA States': '#98ccae',
+  'China Provinces': '#eda398',
 };
 
 // 判定用リスト

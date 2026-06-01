@@ -22,5 +22,18 @@ const usaStates = [
   'WY', 'UT', 'OK', 'NM', 'AZ', 'AK', 'HI', 'DC'
 ];
 
+const chinaProvinces = [
+  'Beijing', 'Tianjin', 'Shanghai', 'Chongqing',
+  'Hebei', 'Shanxi', 'Liaoning', 'Jilin', 'Heilongjiang',
+  'Jiangsu', 'Zhejiang', 'Anhui', 'Fujian', 'Jiangxi', 'Shandong',
+  'Henan', 'Hubei', 'Hunan', 'Guangdong', 'Hainan',
+  'Sichuan', 'Guizhou', 'Yunnan', 'Shaanxi', 'Gansu',
+  'Qinghai', 'Neimenggu', 'Guangxi', 'Xizang',
+  'Ningxia', 'Xinjiang',
+  // 必要に応じて追加
+  // 'HongKong', 'Aomen', 'Taiwan'
+];
+
 countryRegions['USA States'] = usaStates;
+countryRegions['China Provinces'] = chinaProvinces;
 // countryRegions['Capitals'] = capitals;

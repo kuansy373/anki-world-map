@@ -20,7 +20,7 @@ map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
 // レイヤー順（下から上）
-const LAYER_ORDER = ['world', 'usaStates', ];
+const LAYER_ORDER = ['world', 'usaStates', 'chinaProvinces' ];
 
 // GeoJSONデータを保持するオブジェクト
 const geojsonData = {};
@@ -109,6 +109,12 @@ function findFeatureByName(name, sources = LAYER_ORDER) {
     }
   }
   return null;
+}
+
+
+function getDisplayName(name) {
+  if (currentLang === 'ja') return translations[name] || name;
+  return name;
 }
 
 // ==================
@@ -213,7 +219,9 @@ function loadLayer(key, url) {
       map.addSource(key, {
         type: 'geojson',
         data,
-        promoteId: key === 'usaStates' ? 'state_code' : 'name'
+        promoteId: key === 'usaStates'      ? 'state_code'
+                 : key === 'chinaProvinces' ? 'name'  // 英語名がIDになる
+                 : 'name'
       });
 
       map.addLayer({
@@ -315,6 +323,7 @@ function updateProgress() {
           const match = geojsonData.usaStates.features.find(f => f.properties.state_code === country);
           if (match?.properties.name) displayName = match.properties.name;
         }
+        displayName = getDisplayName(displayName);
         const filled = Object.keys(filledFeatures).some(id => normalize(country) === normalize(id) || country === id);
         return { name: displayName, code: country, filled };
       });
@@ -456,7 +465,7 @@ map.on('load', function () {
           .setLngLat(e.lngLat)
           .setHTML(`
             <div class="popup-content">
-              <div class="popup-name">${name}</div>
+              <div class="popup-name">${getDisplayName(name)}</div>
               <div class="popup-region">
                 <span>${region}</span>
                 <button id="resetColorBtn" class="popup-reset-btn"></button>
@@ -608,6 +617,11 @@ Object.entries(regionColors).forEach(([region, color]) => {
 // テーマコントロール UI
 // ==================
 
+const themes = {
+  light: { sea: '#fff' },
+  dark: { sea: '#000' }
+};
+
 function applyTheme(themeName) {
   const theme = themes[themeName];
   map.setPaintProperty('background', 'background-color', theme.sea);
@@ -618,6 +632,16 @@ function applyTheme(themeName) {
 document.querySelectorAll('input[name="theme"]').forEach(radio => {
   radio.addEventListener('change', e => {
     applyTheme(e.target.value);
+  });
+});
+
+// ==================
+// 言語コントロール UI
+// ==================
+document.querySelectorAll('input[name="language"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    currentLang = e.target.value;
+    updateProgress();
   });
 });
 
