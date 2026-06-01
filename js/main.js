@@ -20,7 +20,7 @@ map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
 // レイヤー順（下から上）
-const LAYER_ORDER = ['world', 'usaStates', 'capitals'];
+const LAYER_ORDER = ['world', 'usaStates', ];
 
 // GeoJSONデータを保持するオブジェクト
 const geojsonData = {};
@@ -322,7 +322,7 @@ function updateProgress() {
 
     // Default 地域：GeoJSONから直接収集
     const defaultIds = new Set();
-    ['world', 'capitals'].forEach(key => {
+    ['world'].forEach(key => {
       geojsonData[key]?.features?.forEach(f => {
         if (getRegion(f.properties) === 'Default') {
           defaultIds.add(f.properties.name || f.id);

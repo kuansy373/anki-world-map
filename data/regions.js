@@ -1,7 +1,6 @@
 const geoUrls = {
   world: 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
   usaStates: 'https://raw.githubusercontent.com/datasets/geo-admin1-us/master/data/admin1-us.geojson',
-  capitals: 'https://raw.githubusercontent.com/kuansy373/bookmarklet-host/main/data/capitals.geojson'
 };
 
 const themes = {
