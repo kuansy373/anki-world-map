@@ -492,7 +492,7 @@ map.on('load', function () {
 
       const coords   = e.features[0].geometry.coordinates;
       const degree   = Math.round(isMeridian ? coords[0][0] : coords[0][1]);
-      const label    = (isMeridian ? '経度 ' : '緯度 ') + degree + '°';
+      const label = (isMeridian ? 'Lng: ' : 'Lat: ') + degree + '°';
       const uniqueId = (isMeridian ? 'lon_' : 'lat_') + degree;
       const hlLayerId  = `highlight-line-${uniqueId}`;
       const hlSourceId = `highlight-source-${uniqueId}`;
