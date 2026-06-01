@@ -1,18 +1,18 @@
-const capitals = [
-  'Accra', 'Ashgabat', 'Astana', 'Asmara', 'Asuncion', 'Addis Ababa', 'Athenes', 'Apia', 'Abuja', 'Abu Dhabi', 'Amsterdam', 'Alger', 'Ankara', 'Antananarivo', 'Andorra la Vella', 'Amman',
-  'Islamabad',
-  'Vienna', 'Vientiane', 'Victoria', 'Vilnius',
-  'Windhoek', 'Wellington',
-  'Ulaanbaatar',
-  'Jerusalem',
-  'Yerevan',
-  'Oslo',
-  'Ottawa',
-  'Cairo', 'Castries',
-  'Kathmandu', 'Kabul',
-  'Seoul',
-  'Tokyo',
-];
+// const capitals = [
+//   'Accra', 'Ashgabat', 'Astana', 'Asmara', 'Asuncion', 'Addis Ababa', 'Athenes', 'Apia', 'Abuja', 'Abu Dhabi', 'Amsterdam', 'Alger', 'Ankara', 'Antananarivo', 'Andorra la Vella', 'Amman',
+//   'Islamabad',
+//   'Vienna', 'Vientiane', 'Victoria', 'Vilnius',
+//   'Windhoek', 'Wellington',
+//   'Ulaanbaatar',
+//   'Jerusalem',
+//   'Yerevan',
+//   'Oslo',
+//   'Ottawa',
+//   'Cairo', 'Castries',
+//   'Kathmandu', 'Kabul',
+//   'Seoul',
+//   'Tokyo',
+// ];
 
 const usaStates = [
   'DE', 'PA', 'NJ', 'GA', 'CT', 'MA', 'MD', 'SC', 'NH', 'VA', 'NY', 'NC', 'RI',
@@ -23,4 +23,4 @@ const usaStates = [
 ];
 
 countryRegions['USA States'] = usaStates;
-countryRegions['Capitals'] = capitals;
+// countryRegions['Capitals'] = capitals;

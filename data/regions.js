@@ -22,9 +22,9 @@ const regionColors = {
   'North America': '#b3ce62',
   'South America': '#a3d3d8',
   Antarctica: '#a7b5ff',
-  Capitals: '#ff0000',
+  // Capitals: '#ff0000',
+  Default: '#000000',
   'USA States': '#b3ce62',
-  Default: '#000000'
 };
 
 // 判定用リスト
@@ -152,4 +152,5 @@ const regionView = {
   'Oceania': { center: [147, -25], zoom: 2.5 },
   'North America': { center: [-85, 25], zoom: 3 },
   'South America': { center: [-60, -18], zoom: 2.4 },
+  'Antarctica': { center: [70, -80], zoom: 1.5 }
 };
