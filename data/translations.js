@@ -1,3 +1,7 @@
+const messages = {
+  noViewSettings: { en: 'has no view settings', ja: 'のビュー設定がありません' },
+};
+
 const regionNameJa = {
   'Europe': 'ヨーロッパ',
   'Africa': 'アフリカ',
@@ -8,8 +12,8 @@ const regionNameJa = {
   'South America': '南アメリカ',
   'Antarctica': '南極大陸',
   'Default': '未定義',
-  'USA States': 'アメリカの州',
-  'China Provinces': '中国の省',
+  'USA States': 'アメリカ(州)',
+  'China Provinces': '中国(省)',
 };
 
 const translations = {

@@ -114,17 +114,6 @@ function findFeatureByName(name, sources = LAYER_ORDER) {
   return null;
 }
 
-
-function getDisplayName(name) {
-  if (currentLang === 'ja') return translations[name] || name;
-  return name;
-}
-
-function getRegionDisplayName(region) {
-  if (currentLang === 'ja') return regionNameJa[region] || region;
-  return region;
-}
-
 // ==================
 // 色塗り操作
 // ==================
@@ -613,7 +602,7 @@ function buildRegionControl() {
       e.stopPropagation();
       const view = regionView[region];
       if (view) map.flyTo({ center: view.center, zoom: view.zoom, speed: 0.8, curve: 1.2, essential: true });
-      else alert(`${getRegionDisplayName(region)} のビュー設定がありません`);
+        else alert(`${getRegionDisplayName(region)} ${getMessage('noViewSettings')}`);
     });
 
     // リセットボタン：地域全体の色塗りを解除
@@ -655,11 +644,40 @@ document.querySelectorAll('input[name="theme"]').forEach(radio => {
 // ==================
 // 言語コントロール UI
 // ==================
+
+// 英語-日本語切り替え
+function updateButtonTexts() {
+  document.querySelectorAll('[data-en][data-ja]').forEach(el => {
+    const text = currentLang === 'ja' ? el.dataset.ja : el.dataset.en;
+    if (el.tagName === 'INPUT') {
+      el.placeholder = text;
+    } else {
+      el.textContent = text;
+    }
+  });
+}
+updateButtonTexts();
+
+function getMessage(key) {
+  return messages[key][currentLang];
+}
+
+function getDisplayName(name) {
+  if (currentLang === 'ja') return translations[name] || name;
+  return name;
+}
+
+function getRegionDisplayName(region) {
+  if (currentLang === 'ja') return regionNameJa[region] || region;
+  return region;
+}
+
 document.querySelectorAll('input[name="language"]').forEach(radio => {
   radio.addEventListener('change', e => {
     currentLang = e.target.value;
     updateProgress();
     buildRegionControl();
+    updateButtonTexts();
   });
 });
 
