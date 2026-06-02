@@ -20,7 +20,7 @@ map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
 // レイヤー順（下から上）
-const LAYER_ORDER = ['world', 'usaStates', 'chinaProvinces' ];
+const LAYER_ORDER = ['countries', 'usaStates', 'chinaProvinces' ];
 
 // GeoJSONデータを保持するオブジェクト
 const geojsonData = {};
@@ -245,8 +245,8 @@ function loadLayer(key, url) {
         paint: { 'line-color': '#888', 'line-width': 1 }
       });
 
-      // world のみ初期表示、他は非表示
-      if (key !== 'world') setLayerVisibility(key, false);
+      // countries のみ初期表示、他は非表示
+      if (key !== 'countries') setLayerVisibility(key, false);
       else document.getElementById(`layer_${key}`).checked = true;
     })
     .catch(err => console.error('GeoJSON load failed for', key, err));
@@ -342,7 +342,7 @@ function updateProgress() {
 
     // Default 地域：GeoJSONから直接収集
     const defaultIds = new Set();
-    ['world'].forEach(key => {
+    ['countries'].forEach(key => {
       geojsonData[key]?.features?.forEach(f => {
         if (getRegion(f.properties) === 'Default') {
           defaultIds.add(f.properties.name || f.id);
@@ -506,7 +506,7 @@ map.on('load', function () {
     map.on('click', layerId, e => {
       // 上位レイヤー（国・州）が存在する場合は無視
       const topFeatures = map.queryRenderedFeatures(e.point, {
-        layers: ['world-fill', 'world-line', 'usaStates-fill', 'usaStates-line']
+        layers: ['countries-fill', 'countries-line', 'usaStates-fill', 'usaStates-line']
       });
       if (topFeatures.length > 0 || !e.features.length) return;
 
@@ -546,7 +546,7 @@ map.on('load', function () {
 
     map.on('mousemove', layerId, e => {
       const topFeatures = map.queryRenderedFeatures(e.point, {
-        layers: ['world-fill', 'world-line', 'usaStates-fill', 'usaStates-line']
+        layers: ['countries-fill', 'countries-line', 'usaStates-fill', 'usaStates-line']
       });
       map.getCanvas().style.cursor = topFeatures.length === 0 ? 'pointer' : '';
     });

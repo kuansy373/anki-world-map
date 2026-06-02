@@ -1,5 +1,5 @@
 const geoUrls = {
-  world: 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
+  countries: 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
   usaStates: 'https://raw.githubusercontent.com/datasets/geo-admin1-us/master/data/admin1-us.geojson',
   chinaProvinces: 'https://unpkg.com/cn-atlas@0.1.2/provinces.json',
 };
