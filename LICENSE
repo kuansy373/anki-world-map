@@ -29,8 +29,8 @@ The following third-party components are included under their respective license
    - Copyright (c) 2023, MapLibre contributors
    - https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt
    - Files used:
-     - https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js
-     - https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css
+     - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js
+     - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css
 
 2. MapLibre Demo Fonts
    - License: BSD-3-Clause License (as distributed via demotiles.maplibre.org)
