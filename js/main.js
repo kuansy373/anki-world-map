@@ -449,16 +449,13 @@ document.addEventListener('DOMContentLoaded', () => {
     mapContainer.classList.add('theme-light');
   });
 
-  const geoFetchPromise = Promise.all(
-    LAYER_ORDER.map(key => fetchGeoJSON(key, geoUrls[key]))
-  );
+  // countriesLow とmapロードを並走させ、両方揃ったら初期表示
+  const initialFetch = fetchGeoJSON('countriesLow', geoUrls.initial.countriesLow);
+  const mapLoaded = new Promise(resolve => map.on('load', resolve));
 
-  const mapLoadPromise = new Promise(resolve => map.on('load', resolve));
-
-  Promise.all([mapLoadPromise, geoFetchPromise])
-    .then(([, fetchedLayers]) => {
-      // style.load で追加済みの background レイヤーの後にGeoJSONレイヤーを積む
-      fetchedLayers.forEach(({ key, data }) => addLayerToMap(key, data));
+  Promise.all([mapLoaded, initialFetch])
+    .then(() => {
+      addLayerToMap('countries', geojsonData.countriesLow);
       reorderLayers();
       addGridLayers(generateMeridiansParallels());
 
@@ -563,6 +560,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+      });
+
+      // 以下3つはバックグラウンドで並列fetchして追加
+      Promise.all(
+        Object.entries(geoUrls.background).map(([key, url]) => fetchGeoJSON(key, url))
+      ).then(() => {
+        map.getSource('countries').setData(geojsonData.countries);
+        ['usaStates', 'chinaProvinces'].forEach(key => addLayerToMap(key, geojsonData[key]));
+        reorderLayers();
       });
     })
     .catch(err => console.error('初期化失敗:', err));

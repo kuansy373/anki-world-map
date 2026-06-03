@@ -1,7 +1,10 @@
 const geoUrls = {
-  countries: 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
-  usaStates: 'https://raw.githubusercontent.com/datasets/geo-admin1-us/master/data/admin1-us.geojson',
-  chinaProvinces: 'https://unpkg.com/cn-atlas@0.1.2/provinces.json',
+  initial:    { countriesLow: './data/countries-low.geojson' },
+  background: {
+    countries: './data/countries.geojson',
+    usaStates: './data/usa-states.geojson',
+    chinaProvinces: './data/china-provinces.geojson',
+  }
 };
 
 // 地域別カラー設定
