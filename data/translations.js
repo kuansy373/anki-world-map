@@ -17,6 +17,9 @@ const regionNameJa = {
 };
 
 const translations = {
+  "Lat: ": "緯度: ",
+  "Lng: ": "経度: ",
+  "International Date Line": "国際日付変更線",
   "Albania": "アルバニア",
   "Andorra": "アンドラ",
   "Armenia": "アルメニア",

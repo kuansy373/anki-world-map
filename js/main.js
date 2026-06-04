@@ -212,228 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ==================
-  // GeoJSONロード
-  // ==================
-
-  async function fetchGeoJSON(key, url) {
-    const res = await fetch(url);
-    const data = await res.json();
-    geojsonData[key] = data;
-    return { key, data };
-  }
-
-  function addLayerToMap(key, data) {
-    map.addSource(key, {
-      type: 'geojson',
-      data,
-      promoteId: key === 'usaStates'     ? 'state_code'
-               : key === 'chinaProvinces' ? 'name'
-               : 'name'
-    });
-
-    map.addLayer({
-      id: `${key}-fill`,
-      type: 'fill',
-      source: key,
-      paint: {
-        'fill-color': ['case',
-          ['!=', ['feature-state', 'fillColor'], null],
-          ['feature-state', 'fillColor'],
-          '#eaeaea'
-        ],
-        'fill-opacity': 1
-      }
-    });
-
-    map.addLayer({
-      id: `${key}-line`,
-      type: 'line',
-      source: key,
-      paint: { 'line-color': '#888', 'line-width': 1 }
-    });
-
-    if (key !== 'countries') setLayerVisibility(key, false);
-    else document.getElementById(`layer_${key}`).checked = true;
-  }
-
-  // ==================
-  // 経線・緯線
-  // ==================
-
-  function generateMeridiansParallels() {
-    const meridians = { type: 'FeatureCollection', features: [] };
-    const parallels = { type: 'FeatureCollection', features: [] };
-
-    for (let lon = -180; lon <= 180; lon += 10) {
-      meridians.features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[lon, -90], [lon, 90]] }, properties: {} });
-    }
-    for (let lat = -90; lat <= 90; lat += 10) {
-      parallels.features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[-180, lat], [180, lat]] }, properties: {} });
-    }
-    return { meridians, parallels };
-  }
-
-  function addGridLayers(gridData) {
-    ['meridians', 'parallels'].forEach(key => {
-      map.addSource(key, { type: 'geojson', data: gridData[key] });
-
-      map.addLayer({
-        id: `${key}-line-hitarea`,
-        type: 'line',
-        source: key,
-        paint: { 'line-color': 'rgba(0,0,0,0)', 'line-width': 10 },
-        layout: { visibility: 'none' }
-      });
-
-      map.addLayer({
-        id: `${key}-line`,
-        type: 'line',
-        source: key,
-        paint: { 'line-color': '#888', 'line-width': 1 },
-        layout: { visibility: 'none' }
-      });
-    });
-  }
-
-  // ==================
-  // 進捗表示
-  // ==================
-
-  function updateProgress() {
-    // 各リストのスクロール位置を保存
-    const scrollPositions = {};
-    progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
-      scrollPositions[list.id] = list.scrollTop;
-    });
-
-    const searchQuery = searchInput.value.trim();
-    if (!searchQuery) { progressDisplay.innerHTML = ''; return; }
-
-    const searchTerms = searchQuery.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-    if (searchTerms.length === 0) { progressDisplay.innerHTML = ''; return; }
-
-    const allRegions = [...Object.keys(countryRegions), 'Default'];
-    const matchedRegions = allRegions.filter(region =>
-      searchTerms.some(term => {
-        const termKana = toKatakana(term);
-        return (
-          region.toLowerCase().includes(term) ||
-          getRegionDisplayName(region).toLowerCase().includes(term) ||
-          toKatakana(getRegionDisplayName(region)).includes(termKana)
-        );
-      })
-    );
-
-    if (matchedRegions.length === 0) {
-      progressDisplay.innerHTML = '<div style="color:#999; margin-top:8px;">No matching regions.</div>';
-      return;
-    }
-
-    // 地域ごとの国リストを構築
-    function buildCountryList(region) {
-      if (region !== 'Default') {
-        return countryRegions[region].map(country => {
-          let displayName = country;
-          if (region === 'USA States' && geojsonData.usaStates?.features) {
-            const match = geojsonData.usaStates.features.find(f => f.properties.state_code === country);
-            if (match?.properties.name) displayName = match.properties.name;
-          }
-          displayName = getDisplayName(displayName);
-          const filled = Object.keys(filledFeatures).some(id => normalize(country) === normalize(id) || country === id);
-          return { name: displayName, code: country, filled };
-        });
-      }
-
-      // Default 地域：GeoJSONから直接収集
-      const defaultIds = new Set();
-      ['countries'].forEach(key => {
-        geojsonData[key]?.features?.forEach(f => {
-          if (getRegion(f.properties) === 'Default') {
-            defaultIds.add(f.properties.name || f.id);
-          }
-        });
-      });
-
-      return [...defaultIds].map(id => ({
-        name: id,
-        code: id,
-        filled: Object.keys(filledFeatures).some(fid => normalize(id) === normalize(fid) || id === fid)
-      }));
-    }
-
-    const html = matchedRegions.map(region => {
-      const countryList = buildCountryList(region);
-      const filledCount = countryList.filter(c => c.filled).length;
-      const totalCount  = countryList.length;
-      const color       = regionColors[region] || regionColors.Default;
-      const listId      = `country-list-${region.replace(/\s+/g, '-')}`;
-      const isExpanded  = expandedLists[region] || false;
-      const hasUnfilled = countryList.some(c => !c.filled);
-
-      return `
-        <div class="region-progress-wrapper">
-          <div class="region-progress-header">
-            <div class="region-progress" data-region="${region}" style="cursor:${hasUnfilled ? 'pointer' : 'default'};">
-            <div class="region-progress-name" style="color:${color};">${getRegionDisplayName(region)}</div>
-              <div class="region-progress-count">${filledCount} / ${totalCount}</div>
-            </div>
-            <button class="toggle-list-btn" data-target="${listId}" data-region="${region}">${isExpanded ? '▲' : '▼'}</button>
-          </div>
-          <div id="${listId}" class="country-list" style="display:${isExpanded ? 'block' : 'none'};">
-          ${countryList.map(c => `<div data-code="${c.code}" style="color:${c.filled ? color : '#aaa'};">${c.name}</div>`).join('')}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    progressDisplay.innerHTML = html;
-
-    // スクロール位置を復元
-    progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
-      if (scrollPositions[list.id] !== undefined) list.scrollTop = scrollPositions[list.id];
-    });
-
-    // 地域クリック：ランダムな未塗り国へズーム
-    progressDisplay.querySelectorAll('.region-progress').forEach(elem => {
-      elem.addEventListener('click', () => {
-        const region = elem.dataset.region;
-        const countryList = buildCountryList(region);
-        const unfilled = countryList.filter(c => !c.filled).map(c => c.code);
-        if (unfilled.length === 0) return;
-        const randomName = unfilled[Math.floor(Math.random() * unfilled.length)];
-        const feature = findFeatureByName(randomName, region === 'USA States' ? ['usaStates'] : undefined);
-        if (feature) zoomToFeature(feature);
-      });
-    });
-
-    // 国名クリック：その国へズーム
-    progressDisplay.querySelectorAll('[id^="country-list-"] div').forEach(elem => {
-      elem.style.cursor = 'pointer';
-      elem.addEventListener('mouseenter', () => { elem.dataset.origColor = elem.style.color; elem.style.color = '#000'; });
-      elem.addEventListener('mouseleave', () => { if (elem.dataset.origColor) elem.style.color = elem.dataset.origColor; });
-      elem.addEventListener('click', e => {
-        e.stopPropagation();
-        const countryCode = elem.dataset.code || elem.textContent.trim();
-        const regionId = elem.closest('[id^="country-list-"]').id.replace('country-list-', '').replace(/-/g, ' ');
-        const region = Object.keys(countryRegions).find(r => r.toLowerCase() === regionId.toLowerCase()) || 'Default';
-        const feature = findFeatureByName(countryCode, region === 'USA States' ? ['usaStates'] : undefined);
-        if (feature) zoomToFeature(feature);
-        else console.warn('国を特定できませんでした:', countryCode);
-      });
-    });
-
-    // トグルボタン：国リストの開閉
-    progressDisplay.querySelectorAll('.toggle-list-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const listEl = document.getElementById(btn.dataset.target);
-        const open   = listEl.style.display === 'none';
-        listEl.style.display = open ? 'block' : 'none';
-        btn.textContent = open ? '▲' : '▼';
-        expandedLists[btn.dataset.region] = open;
-      });
-    });
-  }
 
   // ==================
   // レイヤークリックイベント
@@ -489,20 +267,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---- 経線・緯線 ----
-    ['meridians-line-hitarea', 'parallels-line-hitarea'].forEach(layerId => {
+    ['meridians-line-hitarea', 'parallels-line-hitarea', 'dateLine-line-hitarea'].forEach(layerId => {
       const isMeridian = layerId === 'meridians-line-hitarea';
+      const isDateLine = layerId === 'dateLine-line-hitarea';
 
       map.on('click', layerId, e => {
         // 上位レイヤー（国・州）が存在する場合は無視
         const topFeatures = map.queryRenderedFeatures(e.point, {
           layers: ['countries-fill', 'countries-line', 'usaStates-fill', 'usaStates-line']
         });
+
         if (topFeatures.length > 0 || !e.features.length) return;
 
-        const coords   = e.features[0].geometry.coordinates;
-        const degree   = Math.round(isMeridian ? coords[0][0] : coords[0][1]);
-        const label = (isMeridian ? 'Lng: ' : 'Lat: ') + degree + '°';
-        const uniqueId = (isMeridian ? 'lon_' : 'lat_') + degree;
+        // 日付変更線と180°経線なら、経線優先
+        if (isDateLine) {
+          const meridianFeatures = map.queryRenderedFeatures(e.point, {
+            layers: ['meridians-line-hitarea']
+          });
+
+          if (meridianFeatures.length > 0) return;
+        }
+
+        let degree;
+        let label;
+        let uniqueId;
+
+        if (isDateLine) {
+          degree = 180;
+          label = getDisplayName('International Date Line');
+          uniqueId = 'date_line';
+        } else {
+          const coords = e.features[0].geometry.coordinates;
+          degree = Math.round(isMeridian ? coords[0][0] : coords[0][1]);
+          label = getDisplayName(isMeridian ? 'Lng: ' : 'Lat: ') + degree + '°';
+          uniqueId = (isMeridian ? 'lon_' : 'lat_') + degree;
+        }
+
         const hlLayerId  = `highlight-line-${uniqueId}`;
         const hlSourceId = `highlight-source-${uniqueId}`;
 
@@ -515,15 +315,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 新規ハイライト追加
-        const highlightFeature = {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: isMeridian
-              ? [[degree, -85.0511], [degree, 85.0511]]
-              : [[-180, degree], [180, degree]]
-          }
-        };
+        const highlightFeature = isDateLine
+          ? geojsonData.dateLine.features[0]
+          : {
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: isMeridian
+                  ? [[degree, -85.0511], [degree, 85.0511]]
+                  : [[-180, degree], [180, degree]]
+              }
+            };
 
         map.addSource(hlSourceId, { type: 'geojson', data: highlightFeature });
         map.addLayer({ id: hlLayerId, type: 'line', source: hlSourceId, paint: { 'line-color': '#ff7171', 'line-width': 1.5 } });
@@ -543,6 +345,111 @@ document.addEventListener('DOMContentLoaded', () => {
       map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
     });
   }
+
+  // ==================
+  // GeoJSONロード
+  // ==================
+
+  async function fetchGeoJSON(key, url) {
+    const res = await fetch(url);
+    const data = await res.json();
+    geojsonData[key] = data;
+    return { key, data };
+  }
+
+  function addLayerToMap(key, data) {
+    map.addSource(key, {
+      type: 'geojson',
+      data,
+      promoteId: key === 'usaStates'     ? 'state_code'
+               : key === 'chinaProvinces' ? 'name'
+               : 'name'
+    });
+
+    map.addLayer({
+      id: `${key}-fill`,
+      type: 'fill',
+      source: key,
+      paint: {
+        'fill-color': ['case',
+          ['!=', ['feature-state', 'fillColor'], null],
+          ['feature-state', 'fillColor'],
+          '#eaeaea'
+        ],
+        'fill-opacity': 1
+      }
+    });
+
+    map.addLayer({
+      id: `${key}-line`,
+      type: 'line',
+      source: key,
+      paint: { 'line-color': '#888', 'line-width': 1 }
+    });
+
+    if (key !== 'countries') setLayerVisibility(key, false);
+    else document.getElementById(`layer_${key}`).checked = true;
+  }
+
+  // 経線・緯線
+  function generateMeridiansParallels() {
+    const meridians = { type: 'FeatureCollection', features: [] };
+    const parallels = { type: 'FeatureCollection', features: [] };
+
+    for (let lon = -180; lon <= 180; lon += 10) {
+      meridians.features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[lon, -90], [lon, 90]] }, properties: {} });
+    }
+    for (let lat = -90; lat <= 90; lat += 10) {
+      parallels.features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[-180, lat], [180, lat]] }, properties: {} });
+    }
+    return { meridians, parallels };
+  }
+
+  function addGridLayers(gridData) {
+    ['meridians', 'parallels'].forEach(key => {
+      map.addSource(key, { type: 'geojson', data: gridData[key] });
+
+      map.addLayer({
+        id: `${key}-line-hitarea`,
+        type: 'line',
+        source: key,
+        paint: { 'line-color': 'rgba(0,0,0,0)', 'line-width': 10 },
+        layout: { visibility: 'none' }
+      });
+
+      map.addLayer({
+        id: `${key}-line`,
+        type: 'line',
+        source: key,
+        paint: { 'line-color': '#888', 'line-width': 1 },
+        layout: { visibility: 'none' }
+      });
+    });
+  }
+
+  // 日付変更線
+  function addLineLayer(key, data) {
+    map.addSource(key, { type: 'geojson', data });
+    map.addLayer({
+      id: `${key}-line-hitarea`,
+      type: 'line',
+      source: key,
+      paint: { 'line-color': 'rgba(0,0,0,0)', 'line-width': 10 },
+      layout: { visibility: 'none' }
+    });
+    map.addLayer({
+      id: `${key}-line`,
+      type: 'line',
+      source: key,
+      paint: { 'line-color': '#888', 'line-width': 1 },
+      layout: { visibility: 'none' }
+    });
+  }
+
+  const addLayerFn = {
+    polygon: (key, data) => addLayerToMap(key, data),
+    line:    (key, data) => addLineLayer(key, data),
+  };
 
   // ==================
   // マップロード
@@ -569,13 +476,15 @@ document.addEventListener('DOMContentLoaded', () => {
       addGridLayers(generateMeridiansParallels());
       registerClickEvents();
 
-      // 以下3つはバックグラウンドで並列fetchして追加
-      Promise.all(
-        Object.entries(geoUrls.background).map(([key, url]) => fetchGeoJSON(key, url))
-      ).then(() => {
-        map.getSource('countries').setData(geojsonData.countries);
-        ['usaStates', 'chinaProvinces'].forEach(key => addLayerToMap(key, geojsonData[key]));
-        reorderLayers();
+      Object.entries(geoUrls.background).forEach(([key, { url, type }]) => {
+        fetchGeoJSON(key, url).then(() => {
+          if (key === 'countries') {
+            map.getSource('countries').setData(geojsonData.countries);
+          } else {
+            addLayerFn[type](key, geojsonData[key]);
+          }
+          reorderLayers();
+        });
       });
     })
     .catch(err => console.error('初期化失敗:', err));
@@ -593,11 +502,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 経線・緯線のチェックボックス
-  ['meridians', 'parallels'].forEach(key => {
+  ['meridians', 'parallels', 'dateLine'].forEach(key => {
     const cb = layersPanel.querySelector(`#layer_${key}`);
     cb?.addEventListener('change', e => {
       const visibility = e.target.checked ? 'visible' : 'none';
+
       if (map.getLayer(`${key}-line`)) {
         map.setLayoutProperty(`${key}-line`, 'visibility', visibility);
         map.setLayoutProperty(`${key}-line-hitarea`, 'visibility', visibility);
@@ -810,4 +719,144 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
     searchContainer.style.display = 'none';
   });
+
+
+  // ==================
+  // 進捗表示
+  // ==================
+
+  function updateProgress() {
+    // 各リストのスクロール位置を保存
+    const scrollPositions = {};
+    progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
+      scrollPositions[list.id] = list.scrollTop;
+    });
+
+    const searchQuery = searchInput.value.trim();
+    if (!searchQuery) { progressDisplay.innerHTML = ''; return; }
+
+    const searchTerms = searchQuery.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+    if (searchTerms.length === 0) { progressDisplay.innerHTML = ''; return; }
+
+    const allRegions = [...Object.keys(countryRegions), 'Default'];
+    const matchedRegions = allRegions.filter(region =>
+      searchTerms.some(term => {
+        const termKana = toKatakana(term);
+        return (
+          region.toLowerCase().includes(term) ||
+          getRegionDisplayName(region).toLowerCase().includes(term) ||
+          toKatakana(getRegionDisplayName(region)).includes(termKana)
+        );
+      })
+    );
+
+    if (matchedRegions.length === 0) {
+      progressDisplay.innerHTML = '<div style="color:#999; margin-top:8px;">No matching regions.</div>';
+      return;
+    }
+
+    // 地域ごとの国リストを構築
+    function buildCountryList(region) {
+      if (region !== 'Default') {
+        return countryRegions[region].map(country => {
+          let displayName = country;
+          if (region === 'USA States' && geojsonData.usaStates?.features) {
+            const match = geojsonData.usaStates.features.find(f => f.properties.state_code === country);
+            if (match?.properties.name) displayName = match.properties.name;
+          }
+          displayName = getDisplayName(displayName);
+          const filled = Object.keys(filledFeatures).some(id => normalize(country) === normalize(id) || country === id);
+          return { name: displayName, code: country, filled };
+        });
+      }
+
+      // Default 地域：GeoJSONから直接収集
+      const defaultIds = new Set();
+      ['countries'].forEach(key => {
+        geojsonData[key]?.features?.forEach(f => {
+          if (getRegion(f.properties) === 'Default') {
+            defaultIds.add(f.properties.name || f.id);
+          }
+        });
+      });
+
+      return [...defaultIds].map(id => ({
+        name: id,
+        code: id,
+        filled: Object.keys(filledFeatures).some(fid => normalize(id) === normalize(fid) || id === fid)
+      }));
+    }
+
+    const html = matchedRegions.map(region => {
+      const countryList = buildCountryList(region);
+      const filledCount = countryList.filter(c => c.filled).length;
+      const totalCount  = countryList.length;
+      const color       = regionColors[region] || regionColors.Default;
+      const listId      = `country-list-${region.replace(/\s+/g, '-')}`;
+      const isExpanded  = expandedLists[region] || false;
+      const hasUnfilled = countryList.some(c => !c.filled);
+
+      return `
+        <div class="region-progress-wrapper">
+          <div class="region-progress-header">
+            <div class="region-progress" data-region="${region}" style="cursor:${hasUnfilled ? 'pointer' : 'default'};">
+            <div class="region-progress-name" style="color:${color};">${getRegionDisplayName(region)}</div>
+              <div class="region-progress-count">${filledCount} / ${totalCount}</div>
+            </div>
+            <button class="toggle-list-btn" data-target="${listId}" data-region="${region}">${isExpanded ? '▲' : '▼'}</button>
+          </div>
+          <div id="${listId}" class="country-list" style="display:${isExpanded ? 'block' : 'none'};">
+          ${countryList.map(c => `<div data-code="${c.code}" style="color:${c.filled ? color : '#aaa'};">${c.name}</div>`).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    progressDisplay.innerHTML = html;
+
+    // スクロール位置を復元
+    progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
+      if (scrollPositions[list.id] !== undefined) list.scrollTop = scrollPositions[list.id];
+    });
+
+    // 地域クリック：ランダムな未塗り国へズーム
+    progressDisplay.querySelectorAll('.region-progress').forEach(elem => {
+      elem.addEventListener('click', () => {
+        const region = elem.dataset.region;
+        const countryList = buildCountryList(region);
+        const unfilled = countryList.filter(c => !c.filled).map(c => c.code);
+        if (unfilled.length === 0) return;
+        const randomName = unfilled[Math.floor(Math.random() * unfilled.length)];
+        const feature = findFeatureByName(randomName, region === 'USA States' ? ['usaStates'] : undefined);
+        if (feature) zoomToFeature(feature);
+      });
+    });
+
+    // 国名クリック：その国へズーム
+    progressDisplay.querySelectorAll('[id^="country-list-"] div').forEach(elem => {
+      elem.style.cursor = 'pointer';
+      elem.addEventListener('mouseenter', () => { elem.dataset.origColor = elem.style.color; elem.style.color = '#000'; });
+      elem.addEventListener('mouseleave', () => { if (elem.dataset.origColor) elem.style.color = elem.dataset.origColor; });
+      elem.addEventListener('click', e => {
+        e.stopPropagation();
+        const countryCode = elem.dataset.code || elem.textContent.trim();
+        const regionId = elem.closest('[id^="country-list-"]').id.replace('country-list-', '').replace(/-/g, ' ');
+        const region = Object.keys(countryRegions).find(r => r.toLowerCase() === regionId.toLowerCase()) || 'Default';
+        const feature = findFeatureByName(countryCode, region === 'USA States' ? ['usaStates'] : undefined);
+        if (feature) zoomToFeature(feature);
+        else console.warn('国を特定できませんでした:', countryCode);
+      });
+    });
+
+    // 国リストの開閉トグル
+    progressDisplay.querySelectorAll('.toggle-list-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const listEl = document.getElementById(btn.dataset.target);
+        const open   = listEl.style.display === 'none';
+        listEl.style.display = open ? 'block' : 'none';
+        btn.textContent = open ? '▲' : '▼';
+        expandedLists[btn.dataset.region] = open;
+      });
+    });
+  }
 });
