@@ -9,7 +9,7 @@
 
     <title>Anki World Map</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
 
   </head>
@@ -17,6 +17,9 @@
 
     <!-- 地図を表示するコンテナ -->
     <div id="bm-worldmap"></div>
+
+    <!--画面中心のクロスヘア-->
+    <div id="aim-overlay"></div>
 
     <!-- 検索ボックス -->
     <button id="search-toggle">🔍</button>
@@ -84,8 +87,8 @@
     <div id="region-control" class="menu-panel" style="display:none;"></div>
 
     <!-- ライブラリ -->
-    <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js" integrity="sha384-82q0nm29xZzIo5BMtDYnh2/NxeO6FoaK1S/0nF84w3cEsqbBfun3JdMyDVYWfVY5" crossorigin="anonymous"></script>
 
     <!-- データ -->
     <script src="data/regions.js"></script>
