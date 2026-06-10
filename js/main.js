@@ -1029,18 +1029,34 @@ document.addEventListener('DOMContentLoaded', () => {
     applyCommands();
   }
 
+
+  function zoomAt(delta) {
+    const canvas = map.getCanvas();
+    const rect   = canvas.getBoundingClientRect();
+    const aim    = document.getElementById('aim-overlay');
+    const aimRect = aim.getBoundingClientRect();
+
+    const x = aimRect.left + aimRect.width  / 2 - rect.left;
+    const y = aimRect.top  + aimRect.height / 2 - rect.top;
+
+    map.easeTo({
+      zoom: map.getZoom() + delta,
+      around: map.unproject([x, y])
+    });
+  }
+
   ['zoom-in-left','zoom-in-right'].forEach(id => {
     document.getElementById(id).addEventListener('click', () => {
       const el = document.getElementById(id);
       if (el.textContent === '↑') moveY(1);
-      else map.zoomIn();
+      else zoomAt(1);
     });
   });
   ['zoom-out-left','zoom-out-right'].forEach(id => {
     document.getElementById(id).addEventListener('click', () => {
       const el = document.getElementById(id);
       if (el.textContent === '↓') moveY(-1);
-      else map.zoomOut();
+      else zoomAt(-1);
     });
   });
 });
