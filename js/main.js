@@ -929,12 +929,32 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       name: 'aim',
-      pattern: /;aim,?/,
-      apply() {
+      pattern: /;aim(\.[wh]\d+|\.wh\d+|\.o\d+)*,?/,
+      apply(token) {
+        const parts = token.replace(/^;/, '').replace(/,$/, '').split('.').filter(Boolean);
+
+        let w = 24;
+        let h = 24;
+
+        parts.forEach(part => {
+          if (part === 'aim') return;
+          const whMatch = part.match(/^wh(\d+)$/);
+          if (whMatch) { w = parseInt(whMatch[1]); h = parseInt(whMatch[1]); return; }
+          const wMatch = part.match(/^w(\d+)$/);
+          if (wMatch) { w = parseInt(wMatch[1]); return; }
+          const hMatch = part.match(/^h(\d+)$/);
+          if (hMatch) { h = parseInt(hMatch[1]); return; }
+          const oMatch = part.match(/^o(\d+)$/);
+          if (oMatch) { aimOverlay.style.opacity = parseInt(oMatch[1]) / 100; return; }
+        });
+
         aimOverlay.style.display = 'block';
+        aimOverlay.style.width   = `${w}px`;
+        aimOverlay.style.height  = `${h}px`;
       },
       reset() {
         aimOverlay.style.display = 'none';
+        aimOverlay.style.opacity = '1';
       }
     },
   ];
