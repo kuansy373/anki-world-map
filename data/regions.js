@@ -154,3 +154,6 @@ const countryRegions = {
     'Antarctica',
   ]
 };
+
+countryRegions['USA States'] = [];
+countryRegions['China Provinces'] = [];

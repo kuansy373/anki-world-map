@@ -23,12 +23,16 @@ document.addEventListener('DOMContentLoaded', () => {
   map.touchZoomRotate._tapDragZoom.disable();
 
   // レイヤー順（下から上）
-  const LAYER_ORDER = ['countries', 'usaStates', 'chinaProvinces' ];
+  const LAYER_ORDER = ['countries', 'usaStates', 'chinaProvinces'];
+
+  //
+  const REGION_TO_SOURCE = {
+    'USA States':      'usaStates',
+    'China Provinces': 'chinaProvinces',
+  };
 
   // GeoJSONデータ保持オブジェクト
   const geojsonData = {};
-
-  const stateNameMap = new Map();
 
   // 色塗り管理オブジェクト: { [featureId]: { color, layerId } }
   const filledFeatures = {};
@@ -93,10 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /** フィーチャのプロパティから地域名を返す */
-  function getRegion(properties) {
-    if (properties.state_code && countryRegions['USA States'].includes(properties.state_code)) {
-      return 'USA States';
-    }
+  function getRegion(properties, key) {
+    if (key === 'usaStates') return 'USA States';
+    if (key === 'chinaProvinces') return 'China Provinces';
     const isoCode = properties['name'] || properties['ISO3166-1-Alpha-2'];
     const n = normalize(properties.name || '');
     for (const [region, list] of Object.entries(countryRegions)) {
@@ -108,9 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /** フィーチャIDを取得（usaStates は state_code、それ以外は name） */
   function getFeatureId(key, feature) {
-    return key === 'usaStates'
-      ? feature.properties.state_code
-      : (feature.properties['name'] || feature.id || feature.properties.id);
+    if (key === 'countries') {
+      return feature.properties.name;
+    }
+    return feature.properties['iso3166-2'] || feature.properties.name;
   }
 
   /** GeoJSONロード後にインデックスを構築する */
@@ -120,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const props = feature.properties;
       const candidates = [
         props.name, props.NAME, props.ADMIN, props.ADMIN_EN,
-        props.state_code, props['ISO3166-1-Alpha-2']
+        props.state_code, props['ISO3166-1-Alpha-2'], props['iso3166-2']
       ];
       candidates.forEach(v => {
         if (v) index.set(normalize(v), feature);
@@ -137,6 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (feature) return feature;
     }
     return null;
+  }
+
+  //
+  function getSourcesForRegion(region) {
+    const source = REGION_TO_SOURCE[region];
+    return source ? [source] : undefined;
   }
 
   // ひらがな→カナ変換
@@ -168,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = geojsonData[key];
       if (!data?.features) return;
       data.features.forEach(f => {
-        if (getRegion(f.properties) !== region) return;
+        if (getRegion(f.properties, key) !== region) return;
         const fId = getFeatureId(key, f);
         if (fId) callback(key, fId, f);
       });
@@ -275,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const featureId = getFeatureId(key, feature);
     const id        = featureId || props.id || props.name || props.NAME;
     const name      = props.name || props.NAME || props.ADMIN || props.ADMIN_EN || 'Unknown';
-    const region    = getRegion(props);
+    const region    = getRegion(props, key);
     const fillColor = regionColors[region] || regionColors.Default;
 
     if (!filledFeatures[id]) {
@@ -395,9 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
     map.addSource(key, {
       type: 'geojson',
       data,
-      promoteId: key === 'usaStates'     ? 'state_code'
-               : key === 'chinaProvinces' ? 'name'
-               : 'name'
+      promoteId: key === 'countries' ? 'name' : 'iso3166-2'
+
     });
 
     map.addLayer({
@@ -519,11 +528,6 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             addLayerFn[type](key, geojsonData[key]);
             buildFeatureIndex(key, geojsonData[key]);
-            if (key === 'usaStates') {
-              geojsonData.usaStates.features.forEach(f => {
-                stateNameMap.set(f.properties.state_code, f.properties.name);
-              });
-            }
           }
           reorderLayers();
         })
@@ -907,28 +911,43 @@ document.addEventListener('DOMContentLoaded', () => {
   /** 地域に属する国リストを返す */
   function buildCountryList(region) {
     const filledIds = new Set(Object.keys(filledFeatures).map(normalize));
-    if (region !== 'Default') {
-      return countryRegions[region].map(country => {
-        let displayName = country;
-        if (region === 'USA States') {
-          const stateName = stateNameMap.get(country);
-          if (stateName) displayName = stateName;
+
+    // GeoJSONから直接収集する地域
+    const geoJsonRegions = {
+      ...Object.fromEntries(
+        Object.entries(REGION_TO_SOURCE).map(([region, key]) => [
+          region,
+          { key, codeProp: 'iso3166-2', nameProp: 'name' }
+        ])
+      ),
+      'Default': { key: 'countries', codeProp: 'name', nameProp: 'name' },
+    };
+
+    if (geoJsonRegions[region]) {
+      const { key, codeProp, nameProp } = geoJsonRegions[region];
+      const items = [];
+      const seenCodes = new Set();
+      geojsonData[key]?.features?.forEach(f => {
+        if (region === 'Default' && getRegion(f.properties, key) !== 'Default') return;
+        const code = f.properties[codeProp];
+        const name = f.properties[nameProp];
+        if (code && !seenCodes.has(code)) {
+          seenCodes.add(code);
+          items.push({ code, name });
         }
-        displayName = getDisplayName(displayName);
-        const filled = filledIds.has(normalize(country));
-        return { name: displayName, code: country, filled };
       });
+      return items.map(({ code, name }) => ({
+        name: getDisplayName(name),
+        code,
+        filled: filledIds.has(normalize(code))
+      }));
     }
 
-    const defaultIds = new Set();
-    geojsonData.countries?.features?.forEach(f => {
-      if (getRegion(f.properties) === 'Default') defaultIds.add(f.properties.name || f.id);
+    // countryRegionsから収集する地域
+    return countryRegions[region].map(country => {
+      const displayName = getDisplayName(country);
+      return { name: displayName, code: country, filled: filledIds.has(normalize(country)) };
     });
-    return [...defaultIds].map(id => ({
-      name: id,
-      code: id,
-      filled: filledIds.has(normalize(id))
-    }));
   }
 
   /** マッチした地域リストから進捗表示用のHTML文字列を生成する */
@@ -969,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const unfilled = countryList.filter(c => !c.filled).map(c => c.code);
         if (unfilled.length === 0) return;
         const randomName = unfilled[Math.floor(Math.random() * unfilled.length)];
-        const feature = findFeatureByName(randomName, region === 'USA States' ? ['usaStates'] : undefined);
+        const feature = findFeatureByName(randomName, getSourcesForRegion(region));
         if (feature) zoomToFeature(feature);
         return;
       }
@@ -991,7 +1010,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const countryCode = countryDiv.dataset.code || countryDiv.textContent.trim();
         const regionId = countryDiv.closest('[id^="country-list-"]').id.replace('country-list-', '').replace(/-/g, ' ');
         const region = Object.keys(countryRegions).find(r => r.toLowerCase() === regionId.toLowerCase()) || 'Default';
-        const feature = findFeatureByName(countryCode, region === 'USA States' ? ['usaStates'] : undefined);
+        const feature = findFeatureByName(countryCode, getSourcesForRegion(region));
         if (feature) zoomToFeature(feature);
         else console.warn('国を特定できませんでした:', countryCode);
         return;
