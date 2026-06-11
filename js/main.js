@@ -25,8 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // レイヤー順（下から上）
   const LAYER_ORDER = ['countries', 'usaStates', 'chinaProvinces' ];
 
-  // GeoJSONデータを保持するオブジェクト
+  // GeoJSONデータ保持オブジェクト
   const geojsonData = {};
+
+  const stateNameMap = new Map();
 
   // 色塗り管理オブジェクト: { [featureId]: { color, layerId } }
   const filledFeatures = {};
@@ -56,8 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const mapContainer = document.getElementById('bm-worldmap');
   const menuContainer = document.getElementById('menu-container');
   const menuToggle = document.getElementById('menu-toggle');
-  const menuBottom = document.getElementById('menu-bottom');
   const menuTop = document.getElementById('menu-top');
+  const menuBottom = document.getElementById('menu-bottom');
   const btnTheme = document.getElementById('btn-theme');
   const themePanel = document.getElementById('theme-panel');
   const btnLanguage = document.getElementById('btn-language');
@@ -75,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchContainer = document.getElementById('search-container');
   const zoomControlsLeft  = document.getElementById('zoom-controls-left');
   const zoomControlsRight = document.getElementById('zoom-controls-right');
+  const zoomInLeft   = document.getElementById('zoom-in-left');
+  const zoomInRight  = document.getElementById('zoom-in-right');
+  const zoomOutLeft  = document.getElementById('zoom-out-left');
+  const zoomOutRight = document.getElementById('zoom-out-right');
   const aimOverlay = document.getElementById('aim-overlay')
 
   // ==================
@@ -92,13 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'USA States';
     }
     const isoCode = properties['name'] || properties['ISO3166-1-Alpha-2'];
-    if (isoCode) {
-      for (const [region, list] of Object.entries(countryRegions)) {
-        if (list.includes(isoCode)) return region;
-      }
-    }
     const n = normalize(properties.name || '');
     for (const [region, list] of Object.entries(countryRegions)) {
+      if (isoCode && list.includes(isoCode)) return region;
       if (list.some(c => normalize(c) === n)) return region;
     }
     return 'Default';
@@ -188,6 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /** フィーチャにズームインする */
+  const ZOOM_LEVELS = [
+    [5_000_000, 3], [1_000_000, 4], [100_000, 5], [10_000, 6],
+    [1_000, 7], [100, 8], [10, 9], [5, 10], [1, 11], [0.5, 12], [0.1, 13], [0.05, 14]
+  ];
+
   function zoomToFeature(feature) {
     if (!feature?.geometry) return;
 
@@ -206,11 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const area = turf.area(feature.geometry) / 1_000_000;
-    const zoomLevels = [
-      [5_000_000, 3], [1_000_000, 4], [100_000, 5], [10_000, 6],
-      [1_000, 7], [100, 8], [10, 9], [5, 10], [1, 11], [0.5, 12], [0.1, 13], [0.05, 14]
-    ];
-    const zoom = zoomLevels.find(([t]) => area > t)?.[1] ?? 15;
+    const zoom = ZOOM_LEVELS.find(([t]) => area > t)?.[1] ?? 15;
     map.flyTo({ center, zoom, duration: 1000 });
   }
 
@@ -238,96 +241,114 @@ document.addEventListener('DOMContentLoaded', () => {
   // レイヤークリックイベント
   // ==================
 
-  function registerClickEvents() {
-    // ---- 国・州 ----
+  function isCoveredByUpperLayer(key, point) {
+    const upperLayers = LAYER_ORDER.slice(LAYER_ORDER.indexOf(key) + 1).map(k => `${k}-fill`);
+    return upperLayers.some(l => map.queryRenderedFeatures(point, { layers: [l] }).length > 0);
+  }
+
+  function createResetPopup(key, id, name, region, lngLat) {
+    const popup = new maplibregl.Popup()
+      .setLngLat(lngLat)
+      .setHTML(`
+        <div class="popup-content">
+          <div class="popup-name">${getDisplayName(name)}</div>
+          <div class="popup-region">
+            <span>${getRegionDisplayName(region)}</span>
+            <button id="resetColorBtn" class="popup-reset-btn"></button>
+          </div>
+        </div>
+      `)
+      .addTo(map);
+
+    setTimeout(() => {
+      document.getElementById('resetColorBtn')?.addEventListener('click', () => {
+        clearFeature(key, id);
+        popup.remove();
+        updateProgress(getCurrentRegionQuery());
+      });
+    }, 0);
+  }
+
+  function toggleFeatureFill(key, e) {
+    const feature   = e.features[0];
+    const props     = feature.properties;
+    const featureId = getFeatureId(key, feature);
+    const id        = featureId || props.id || props.name || props.NAME;
+    const name      = props.name || props.NAME || props.ADMIN || props.ADMIN_EN || 'Unknown';
+    const region    = getRegion(props);
+    const fillColor = regionColors[region] || regionColors.Default;
+
+    if (!filledFeatures[id]) {
+      fillFeature(key, id, fillColor);
+      updateProgress(getCurrentRegionQuery());
+    } else {
+      createResetPopup(key, id, name, region, e.lngLat);
+    }
+  }
+
+  function registerCountryClickEvents() {
     LAYER_ORDER.forEach(key => {
       map.on('click', `${key}-fill`, e => {
-        const feature = e.features[0];
-        const props   = feature.properties;
-
-        // 上位レイヤーのフィーチャがある場合は無視
-        const upperLayers = LAYER_ORDER.slice(LAYER_ORDER.indexOf(key) + 1).map(k => `${k}-fill`);
-        if (upperLayers.some(l => map.queryRenderedFeatures(e.point, { layers: [l] }).length > 0)) return;
-
-        const featureId = getFeatureId(key, feature);
-        const id        = featureId || props.id || props.name || props.NAME;
-        const name      = props.name || props.NAME || props.ADMIN || props.ADMIN_EN || 'Unknown';
-        const region    = getRegion(props);
-        const fillColor = regionColors[region] || regionColors.Default;
-
-        if (!filledFeatures[id]) {
-          fillFeature(key, id, fillColor);
-          updateProgress(getCurrentRegionQuery());
-        } else {
-          // 塗り済みの場合：ポップアップでリセット可能にする
-          const popup = new maplibregl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(`
-              <div class="popup-content">
-                <div class="popup-name">${getDisplayName(name)}</div>
-                <div class="popup-region">
-                  <span>${getRegionDisplayName(region)}</span>
-                  <button id="resetColorBtn" class="popup-reset-btn"></button>
-                </div>
-              </div>
-            `)
-            .addTo(map);
-
-          setTimeout(() => {
-            document.getElementById('resetColorBtn')?.addEventListener('click', () => {
-              clearFeature(key, id);
-              popup.remove();
-              updateProgress(getCurrentRegionQuery());
-            });
-          }, 0);
-        }
+        if (isCoveredByUpperLayer(key, e.point)) return;
+        toggleFeatureFill(key, e);
       });
 
       map.on('mouseenter', `${key}-fill`, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', `${key}-fill`, () => { map.getCanvas().style.cursor = ''; });
     });
+  }
 
-    // ---- 経線・緯線 ----
+  function getLineInfo(layerId, feature) {
+    const isMeridian = layerId === 'meridians-line-hitarea';
+    const isDateLine = layerId === 'dateLine-line-hitarea';
+
+    if (isDateLine) {
+      return {
+        uniqueId: 'date_line',
+        label: getDisplayName('International Date Line'),
+        highlightFeature: geojsonData.dateLine.features[0]
+      };
+    }
+
+    const coords = feature.geometry.coordinates;
+    const degree = Math.round(isMeridian ? coords[0][0] : coords[0][1]);
+    const uniqueId = (isMeridian ? 'lon_' : 'lat_') + degree;
+    const label = getDisplayName(isMeridian ? 'Lng: ' : 'Lat: ') + degree + '°';
+    const highlightFeature = {
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: isMeridian
+          ? [[degree, -85.0511], [degree, 85.0511]]
+          : [[-180, degree], [180, degree]]
+      }
+    };
+
+    return { uniqueId, label, highlightFeature };
+  }
+
+  function registerLineClickEvents() {
     ['meridians-line-hitarea', 'parallels-line-hitarea', 'dateLine-line-hitarea'].forEach(layerId => {
-      const isMeridian = layerId === 'meridians-line-hitarea';
       const isDateLine = layerId === 'dateLine-line-hitarea';
 
       map.on('click', layerId, e => {
-        // 上位レイヤー（国・州）が存在する場合は無視
         const topFeatures = map.queryRenderedFeatures(e.point, {
           layers: ['countries-fill', 'countries-line', 'usaStates-fill', 'usaStates-line']
         });
-
         if (topFeatures.length > 0 || !e.features.length) return;
 
-        // 日付変更線と180°経線なら、経線優先
         if (isDateLine) {
           const meridianFeatures = map.queryRenderedFeatures(e.point, {
             layers: ['meridians-line-hitarea']
           });
-
           if (meridianFeatures.length > 0) return;
         }
 
-        let degree;
-        let label;
-        let uniqueId;
-
-        if (isDateLine) {
-          degree = 180;
-          label = getDisplayName('International Date Line');
-          uniqueId = 'date_line';
-        } else {
-          const coords = e.features[0].geometry.coordinates;
-          degree = Math.round(isMeridian ? coords[0][0] : coords[0][1]);
-          label = getDisplayName(isMeridian ? 'Lng: ' : 'Lat: ') + degree + '°';
-          uniqueId = (isMeridian ? 'lon_' : 'lat_') + degree;
-        }
+        const { uniqueId, label, highlightFeature } = getLineInfo(layerId, e.features[0]);
 
         const hlLayerId  = `highlight-line-${uniqueId}`;
         const hlSourceId = `highlight-source-${uniqueId}`;
 
-        // 既存ハイライトを解除
         if (highlightedLines.has(uniqueId)) {
           if (map.getLayer(hlLayerId))   map.removeLayer(hlLayerId);
           if (map.getSource(hlSourceId)) map.removeSource(hlSourceId);
@@ -335,23 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // 新規ハイライト追加
-        const highlightFeature = isDateLine
-          ? geojsonData.dateLine.features[0]
-          : {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: isMeridian
-                  ? [[degree, -85.0511], [degree, 85.0511]]
-                  : [[-180, degree], [180, degree]]
-              }
-            };
-
         map.addSource(hlSourceId, { type: 'geojson', data: highlightFeature });
         map.addLayer({ id: hlLayerId, type: 'line', source: hlSourceId, paint: { 'line-color': '#ff7171', 'line-width': 1.5 } });
         map.moveLayer(hlLayerId);
-        highlightedLines.set(uniqueId, { layerId: hlLayerId, sourceId: hlSourceId, degree });
+        highlightedLines.set(uniqueId, { layerId: hlLayerId, sourceId: hlSourceId });
 
         new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<strong>${label}</strong>`).addTo(map);
       });
@@ -365,6 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
     });
+  }
+
+  function registerClickEvents() {
+    registerCountryClickEvents();
+    registerLineClickEvents();
   }
 
   // ==================
@@ -409,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (key !== 'countries') setLayerVisibility(key, false);
-    else document.getElementById(`layer_${key}`).checked = true;
+    else layersPanel.querySelector(`#layer_${key}`).checked = true;
   }
 
   // 経線・緯線
@@ -506,6 +519,11 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             addLayerFn[type](key, geojsonData[key]);
             buildFeatureIndex(key, geojsonData[key]);
+            if (key === 'usaStates') {
+              geojsonData.usaStates.features.forEach(f => {
+                stateNameMap.set(f.properties.state_code, f.properties.name);
+              });
+            }
           }
           reorderLayers();
         })
@@ -549,6 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.entries(regionColors).forEach(([region, color]) => {
       const regionItem = document.createElement('div');
       regionItem.className = 'region-item';
+      regionItem.dataset.region = region; // 追加
 
       const colorBox = document.createElement('span');
       colorBox.className = 'color-box';
@@ -560,22 +579,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const resetBtn = document.createElement('button');
       resetBtn.className = 'reset-btn';
 
-      // 色ボックスクリック：地域全体を塗りつぶす
       colorBox.addEventListener('click', e => {
         e.stopPropagation();
         applyToRegionFeatures(region, (key, fId) => fillFeature(key, fId, color));
         updateProgress(getCurrentRegionQuery());
       });
 
-      // 地域名クリック：その地域にズーム
       label.addEventListener('click', e => {
         e.stopPropagation();
         const view = regionView[region];
         if (view) map.flyTo({ center: view.center, zoom: view.zoom, speed: 0.8, curve: 1.2, essential: true });
-          else alert(`${getRegionDisplayName(region)} ${getMessage('noViewSettings')}`);
+        else alert(`${getRegionDisplayName(region)} ${getMessage('noViewSettings')}`);
       });
 
-      // リセットボタン：地域全体の色塗りを解除
       resetBtn.addEventListener('click', e => {
         e.stopPropagation();
         applyToRegionFeatures(region, (key, fId) => clearFeature(key, fId));
@@ -584,6 +600,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       regionItem.append(colorBox, label, resetBtn);
       regionControl.appendChild(regionItem);
+    });
+  }
+
+  function updateRegionControlTexts() {
+    regionControl.querySelectorAll('.region-item').forEach(item => {
+      const region = item.dataset.region;
+      item.querySelector('span:not(.color-box)').textContent = getRegionDisplayName(region);
     });
   }
 
@@ -601,9 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.querySelectorAll('input[name="theme"]').forEach(radio => {
-    radio.addEventListener('change', e => {
-      applyTheme(e.target.value);
-    });
+    radio.addEventListener('change', e => applyTheme(e.target.value));
   });
 
   // ==================
@@ -628,8 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getDisplayName(name) {
-    if (currentLang === 'ja') return translations[name] || name;
-    return name;
+    return currentLang === 'ja' ? (translations[name] || name) : name;
   }
 
   function getRegionDisplayName(region) {
@@ -641,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
     radio.addEventListener('change', e => {
       currentLang = e.target.value;
       updateProgress(getCurrentRegionQuery());
-      buildRegionControl();
+      updateRegionControlTexts();
       updateButtonTexts();
     });
   });
@@ -722,11 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('input[name="projection"]').forEach(radio => {
     radio.addEventListener('change', e => {
-      if (e.target.value === 'globe') {
-        map.setProjection({ type: 'globe' });
-      } else {
-        map.setProjection({ type: 'mercator' });
-      }
+      map.setProjection({ type: e.target.value });
     });
   });
 
@@ -741,8 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bringToFront(searchContainer);
   });
 
-  closeButton.addEventListener('click', (e) => {
-    e.stopPropagation();
+  closeButton.addEventListener('click', () => {
     searchContainer.style.display = 'none';
   });
 
@@ -822,14 +837,10 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   function setZoomBtnText(inText, outText) {
-    ['zoom-in-left','zoom-in-right'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = inText;
-    });
-    ['zoom-out-left','zoom-out-right'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = outText;
-    });
+    zoomInLeft.textContent  = inText;
+    zoomInRight.textContent = inText;
+    zoomOutLeft.textContent  = outText;
+    zoomOutRight.textContent = outText;
   }
 
   function applyCommands() {
@@ -895,19 +906,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /** 地域に属する国リストを返す */
   function buildCountryList(region) {
+    const filledIds = new Set(Object.keys(filledFeatures).map(normalize));
     if (region !== 'Default') {
       return countryRegions[region].map(country => {
         let displayName = country;
-        if (region === 'USA States' && geojsonData.usaStates?.features) {
-          const match = geojsonData.usaStates.features.find(f => f.properties.state_code === country);
-          if (match?.properties.name) displayName = match.properties.name;
+        if (region === 'USA States') {
+          const stateName = stateNameMap.get(country);
+          if (stateName) displayName = stateName;
         }
         displayName = getDisplayName(displayName);
-        const filled = Object.keys(filledFeatures).some(id => normalize(country) === normalize(id) || country === id);
+        const filled = filledIds.has(normalize(country));
         return { name: displayName, code: country, filled };
       });
     }
-    // Default 地域：GeoJSONから直接収集
+
     const defaultIds = new Set();
     geojsonData.countries?.features?.forEach(f => {
       if (getRegion(f.properties) === 'Default') defaultIds.add(f.properties.name || f.id);
@@ -915,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return [...defaultIds].map(id => ({
       name: id,
       code: id,
-      filled: Object.keys(filledFeatures).some(fid => normalize(id) === normalize(fid) || id === fid)
+      filled: filledIds.has(normalize(id))
     }));
   }
 
@@ -948,56 +960,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /** progressDisplay にイベントを登録する */
   function attachProgressEvents() {
-    // 地域クリック：ランダムな未塗り国へズーム
-    progressDisplay.querySelectorAll('.region-progress').forEach(elem => {
-      elem.addEventListener('click', () => {
-        const region = elem.dataset.region;
+    progressDisplay.addEventListener('click', e => {
+      // .region-progress のクリック
+      const regionProgress = e.target.closest('.region-progress');
+      if (regionProgress) {
+        const region = regionProgress.dataset.region;
         const countryList = buildCountryList(region);
         const unfilled = countryList.filter(c => !c.filled).map(c => c.code);
         if (unfilled.length === 0) return;
         const randomName = unfilled[Math.floor(Math.random() * unfilled.length)];
         const feature = findFeatureByName(randomName, region === 'USA States' ? ['usaStates'] : undefined);
         if (feature) zoomToFeature(feature);
-      });
-    });
+        return;
+      }
 
-    // 国名クリック：その国へズーム
-    progressDisplay.querySelectorAll('[id^="country-list-"] div').forEach(elem => {
-      elem.style.cursor = 'pointer';
-      elem.addEventListener('mouseenter', () => { elem.dataset.origColor = elem.style.color; elem.style.color = '#000'; });
-      elem.addEventListener('mouseleave', () => { if (elem.dataset.origColor) elem.style.color = elem.dataset.origColor; });
-      elem.addEventListener('click', e => {
-        e.stopPropagation();
-        const countryCode = elem.dataset.code || elem.textContent.trim();
-        const regionId = elem.closest('[id^="country-list-"]').id.replace('country-list-', '').replace(/-/g, ' ');
+      // .toggle-list-btn のクリック
+      const toggleBtn = e.target.closest('.toggle-list-btn');
+      if (toggleBtn) {
+        const listEl = document.getElementById(toggleBtn.dataset.target);
+        const open = listEl.style.display === 'none';
+        listEl.style.display = open ? 'block' : 'none';
+        toggleBtn.textContent = open ? '▲' : '▼';
+        expandedLists[toggleBtn.dataset.region] = open;
+        return;
+      }
+
+      // 国名 div のクリック
+      const countryDiv = e.target.closest('[id^="country-list-"] div');
+      if (countryDiv) {
+        const countryCode = countryDiv.dataset.code || countryDiv.textContent.trim();
+        const regionId = countryDiv.closest('[id^="country-list-"]').id.replace('country-list-', '').replace(/-/g, ' ');
         const region = Object.keys(countryRegions).find(r => r.toLowerCase() === regionId.toLowerCase()) || 'Default';
         const feature = findFeatureByName(countryCode, region === 'USA States' ? ['usaStates'] : undefined);
         if (feature) zoomToFeature(feature);
         else console.warn('国を特定できませんでした:', countryCode);
-      });
+        return;
+      }
     });
 
-    // 国リストの開閉トグル
-    progressDisplay.querySelectorAll('.toggle-list-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const listEl = document.getElementById(btn.dataset.target);
-        const open = listEl.style.display === 'none';
-        listEl.style.display = open ? 'block' : 'none';
-        btn.textContent = open ? '▲' : '▼';
-        expandedLists[btn.dataset.region] = open;
-      });
+    progressDisplay.addEventListener('mouseover', e => {
+      const countryDiv = e.target.closest('[id^="country-list-"] div');
+      if (countryDiv) {
+        countryDiv.dataset.origColor = countryDiv.style.color;
+        countryDiv.style.color = '#000';
+      }
+    });
+
+    progressDisplay.addEventListener('mouseout', e => {
+      const countryDiv = e.target.closest('[id^="country-list-"] div');
+      if (countryDiv && countryDiv.dataset.origColor) {
+        countryDiv.style.color = countryDiv.dataset.origColor;
+      }
     });
   }
 
   /** 進捗表示を更新する **/
   function updateProgress(regionQuery) {
+    if (!regionQuery) { progressDisplay.innerHTML = ''; return; }
+
     // スクロール位置を保存
     const scrollPositions = {};
     progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
       scrollPositions[list.id] = list.scrollTop;
     });
-
-    if (!regionQuery) { progressDisplay.innerHTML = ''; return; }
 
     const matchedRegions = getMatchedRegions(regionQuery);
 
@@ -1007,7 +1032,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     progressDisplay.innerHTML = buildProgressHTML(matchedRegions);
-    attachProgressEvents();
 
     // スクロール位置を復元
     progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
@@ -1020,6 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // searchInput イベント
   // ==================
 
+  attachProgressEvents();
   searchContainer.addEventListener('click', e => e.stopPropagation());
   searchInput.addEventListener('input', applyCommands);
 
@@ -1061,15 +1086,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  ['zoom-in-left','zoom-in-right'].forEach(id => {
-    const el = document.getElementById(id);
+  [zoomInLeft, zoomInRight].forEach(el => {
     el.addEventListener('click', () => {
       if (el.textContent === '↑') moveY(1);
       else zoomAt(1);
     });
   });
-  ['zoom-out-left','zoom-out-right'].forEach(id => {
-    const el = document.getElementById(id);
+  [zoomOutLeft, zoomOutRight].forEach(el => {
     el.addEventListener('click', () => {
       if (el.textContent === '↓') moveY(-1);
       else zoomAt(-1);
