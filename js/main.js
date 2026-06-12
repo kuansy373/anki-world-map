@@ -810,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       name: 'aim',
-      pattern: /;aim(\.[wh]\d+|\.wh\d+|\.o\d+)*,?/,
+      pattern: /;aim(\.[whs]\d+|\.o\d+)*,?/,
       apply(token) {
         const parts = token.replace(/^;/, '').replace(/,$/, '').split('.').filter(Boolean);
 
@@ -819,8 +819,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         parts.forEach(part => {
           if (part === 'aim') return;
-          const whMatch = part.match(/^wh(\d+)$/);
-          if (whMatch) { w = parseInt(whMatch[1]); h = parseInt(whMatch[1]); return; }
+          const sMatch = part.match(/^s(\d+)$/);
+          if (sMatch) { w = parseInt(sMatch[1]); h = parseInt(sMatch[1]); return; }
           const wMatch = part.match(/^w(\d+)$/);
           if (wMatch) { w = parseInt(wMatch[1]); return; }
           const hMatch = part.match(/^h(\d+)$/);
