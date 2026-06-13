@@ -14,9 +14,11 @@ const regionNameJa = {
   'Default': '未定義',
   'USA States': 'アメリカ(州)',
   'China Provinces': '中国(省)',
+  'Commands': 'コマンド',
 };
 
 const translations = {
+  "README": "わたしを読んで",
   "Lat: ": "緯度: ",
   "Lng: ": "経度: ",
   "International Date Line": "国際日付変更線",

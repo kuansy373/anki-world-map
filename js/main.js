@@ -55,6 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 言語
   let currentLang = 'en';
 
+  const COPY_ICON = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="9" y="9" width="13" height="13" rx="2"/>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>`;
+
   // ==================
   // DOM参照
   // ==================
@@ -156,6 +161,22 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
+  // クリップボードへコピー
+  async function copyToClipboard(button, text) {
+    if (button.dataset.copying) return;
+    try {
+      button.dataset.copying = 'true';
+      await navigator.clipboard.writeText(text);
+      button.innerHTML = '✓';
+      setTimeout(() => {
+        button.innerHTML = COPY_ICON;
+        delete button.dataset.copying;
+      }, 1500);
+    } catch (err) {
+      console.error('コピーに失敗しました:', err);
+      delete button.dataset.copying;
+    }
+  }
   // ==================
   // 色塗り操作
   // ==================
@@ -772,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const commands = [
     {
       name: 'zm',
-      pattern: /;zm(\.[lr])?(\.y-?\d*)?(\.[lr])?(\.y-?\d*)*,?/,
+      pattern: /;zm(\.[lr])?(\.y-?\d*)?(\.[lr])?(\.y-?\d*)*[,;]?/,
       apply(token) {
         const parts = token.replace(/^;/, '').replace(/,$/, '').split('.').filter(Boolean);
 
@@ -810,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       name: 'aim',
-      pattern: /;aim(\.[whs]\d+|\.o\d+)*,?/,
+      pattern: /;aim(\.[whs]\d+|\.o\d+)*[,;]?/,
       apply(token) {
         const parts = token.replace(/^;/, '').replace(/,$/, '').split('.').filter(Boolean);
 
@@ -830,8 +851,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         aimOverlay.style.display = 'block';
-        aimOverlay.style.width   = `${w}px`;
-        aimOverlay.style.height  = `${h}px`;
+        aimOverlay.style.width  = `${Math.min(w, window.innerWidth)}px`;
+        aimOverlay.style.height = `${Math.min(h, window.innerHeight)}px`;
       },
       reset() {
         aimOverlay.style.display = 'none';
@@ -895,7 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function getMatchedRegions(query) {
     const searchTerms = query.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
     if (searchTerms.length === 0) return [];
-    const allRegions = [...Object.keys(countryRegions), 'Default'];
+    const allRegions = [...Object.keys(countryRegions), 'Default', 'Commands'];
     return allRegions.filter(region =>
       searchTerms.some(term => {
         const termKana = toKatakana(term);
@@ -950,31 +971,76 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /** Commands セクションのHTMLを生成する */
+  function buildCommandsSectionHTML() {
+    const raw = searchInput.value;
+    const activeCommands = commands
+      .map(cmd => {
+        const m = raw.match(cmd.pattern);
+        if (!m) return null;
+        return { token: m[0].replace(/,$/, ''), index: m.index };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.index - b.index)
+      .map(({ token }) => token)
+      .join('')
+      .replace(/;;+/g, ';');
+
+    const activeCommandsHTML = activeCommands
+      ? `<div class="command-active">
+          <code>${activeCommands}</code>
+          <button class="copy-btn" data-copy="${activeCommands}">${COPY_ICON}</button>
+        </div>`
+      : `<div class="command-active command-none">No active commands</div>`;
+
+    const listId = 'country-list-Commands';
+    const isExpanded = expandedLists['Commands'] || false;
+
+    return `
+      <div class="region-progress-header commands-header">
+        <div class="region-progress" style="cursor:default;">
+          <div class="region-progress-name commands-title">${getRegionDisplayName('Commands')}</div>
+        </div>
+        <button class="toggle-list-btn" data-target="${listId}" data-region="Commands">${isExpanded ? '▲' : '▼'}</button>
+      </div>
+      <div id="${listId}" class="country-list" style="display:${isExpanded ? 'block' : 'none'};">
+        ${activeCommandsHTML}
+        <div><a href="https://github.com/kuansy373/anki-world-map#readme" target="_blank">${getDisplayName('README')}</a></div>
+      </div>
+    `;
+  }
+
+  /** 地域セクション1件分のHTMLを生成する */
+  function buildRegionSectionHTML(region) {
+    const countryList = buildCountryList(region);
+    const filledCount = countryList.filter(c => c.filled).length;
+    const totalCount = countryList.length;
+    const color = regionColors[region] || regionColors.Default;
+    const listId = `country-list-${region.replace(/\s+/g, '-')}`;
+    const isExpanded = expandedLists[region] || false;
+    const hasUnfilled = countryList.some(c => !c.filled);
+
+    return `
+      <div class="region-progress-header">
+        <div class="region-progress" data-region="${region}" style="cursor:${hasUnfilled ? 'pointer' : 'default'};">
+          <div class="region-progress-name" style="color:${color};">${getRegionDisplayName(region)}</div>
+          <div class="region-progress-count">${filledCount} / ${totalCount}</div>
+        </div>
+        <button class="toggle-list-btn" data-target="${listId}" data-region="${region}">${isExpanded ? '▲' : '▼'}</button>
+      </div>
+      <div id="${listId}" class="country-list" style="display:${isExpanded ? 'block' : 'none'};">
+        ${countryList.map(c => `<div data-code="${c.code}" style="color:${c.filled ? color : '#aaa'};">${c.name}</div>`).join('')}
+      </div>
+    `;
+  }
+
   /** マッチした地域リストから進捗表示用のHTML文字列を生成する */
   function buildProgressHTML(matchedRegions) {
-    return matchedRegions.map(region => {
-      const countryList = buildCountryList(region);
-      const filledCount = countryList.filter(c => c.filled).length;
-      const totalCount = countryList.length;
-      const color = regionColors[region] || regionColors.Default;
-      const listId = `country-list-${region.replace(/\s+/g, '-')}`;
-      const isExpanded = expandedLists[region] || false;
-      const hasUnfilled = countryList.some(c => !c.filled);
-      return `
-        <div class="region-progress-wrapper">
-          <div class="region-progress-header">
-            <div class="region-progress" data-region="${region}" style="cursor:${hasUnfilled ? 'pointer' : 'default'};">
-              <div class="region-progress-name" style="color:${color};">${getRegionDisplayName(region)}</div>
-              <div class="region-progress-count">${filledCount} / ${totalCount}</div>
-            </div>
-            <button class="toggle-list-btn" data-target="${listId}" data-region="${region}">${isExpanded ? '▲' : '▼'}</button>
-          </div>
-          <div id="${listId}" class="country-list" style="display:${isExpanded ? 'block' : 'none'};">
-            ${countryList.map(c => `<div data-code="${c.code}" style="color:${c.filled ? color : '#aaa'};">${c.name}</div>`).join('')}
-          </div>
-        </div>
-      `;
-    }).join('');
+    return matchedRegions.map(region =>
+      region === 'Commands'
+        ? buildCommandsSectionHTML()
+        : buildRegionSectionHTML(region)
+    ).join('');
   }
 
   /** progressDisplay にイベントを登録する */
@@ -984,6 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const regionProgress = e.target.closest('.region-progress');
       if (regionProgress) {
         const region = regionProgress.dataset.region;
+        if (region === 'Commands') return;
         const countryList = buildCountryList(region);
         const unfilled = countryList.filter(c => !c.filled).map(c => c.code);
         if (unfilled.length === 0) return;
@@ -1004,9 +1071,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // コマンドコピー
+      const copyBtn = e.target.closest('.copy-btn');
+      if (copyBtn) {
+        copyToClipboard(copyBtn, copyBtn.dataset.copy);
+        return;
+      }
+
       // 国名 div のクリック
       const countryDiv = e.target.closest('[id^="country-list-"] div');
       if (countryDiv) {
+        if (!countryDiv.dataset.code) return;
         const countryCode = countryDiv.dataset.code || countryDiv.textContent.trim();
         const regionId = countryDiv.closest('[id^="country-list-"]').id.replace('country-list-', '').replace(/-/g, ' ');
         const region = Object.keys(countryRegions).find(r => r.toLowerCase() === regionId.toLowerCase()) || 'Default';
@@ -1060,12 +1135,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ==================
-  // searchInput イベント
+  // searchInput イベント等
   // ==================
 
   attachProgressEvents();
   searchContainer.addEventListener('click', e => e.stopPropagation());
   searchInput.addEventListener('input', applyCommands);
+
+  window.addEventListener('resize', () => {
+    if (aimOverlay.style.display !== 'none') applyCommands();
+  });
 
   // ==================
   // ズームコントロール

@@ -227,6 +227,54 @@ body {
 
 
 
+.command-active {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.command-active code {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.93em;
+  background: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 0;
+  margin-right: 10px;
+  width: 14px;
+}
+
+.commands-header {
+  height: 34px;
+}
+
+.commands-title {
+  color: #000090;
+}
+
+/*READMEリンク*/
+.country-list a {
+  text-decoration: none;
+  cursor: alias;
+  color: blue;
+}
+
+
+
+
+
 .region-progress-header {
   display: flex;
   align-items: center;
