@@ -10,15 +10,14 @@ const geoUrls = {
 
 // 地域別カラー設定
 const regionColors = {
-  Europe: '#3ebbb6',
+  Europe: '#50bab5',
   Africa: '#81ca98',
-  'Middle East': '#a5a66a',
+  'Middle East': '#b2b379',
   Asia: '#fa9eaa',
-  Oceania: '#dc7550',
-  'North America': '#b3ce62',
+  Oceania: '#eb9272',
+  'North America': '#c0d288',
   'South America': '#a3d3d8',
   Antarctica: '#a7b5ff',
-  // Capitals: '#ff0000',
   Default: '#000000',
   'USA States': '#98ccae',
   'China Provinces': '#eda398',

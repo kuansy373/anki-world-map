@@ -7,6 +7,14 @@ body {
   height: 100vh;
 }
 
+#bm-worldmap.theme-dark {
+  background: #000000;
+}
+
+#bm-worldmap.theme-light {
+  background: #ffffff;
+}
+
 
 
 
@@ -219,15 +227,11 @@ body {
 
 
 
-.region-progress-wrapper {
-  margin-bottom: 3px;
-}
-
 .region-progress-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
+  margin-top: 3px;
 }
 
 .region-progress-name {
@@ -250,8 +254,8 @@ body {
 }
 
 .country-list {
-  margin-top: 5px;
-  padding-left: 10px;
+  margin-top: 2px;
+  padding-left: 5px;
   max-height: 200px;
   overflow-y: auto;
   font-size: 13px;
@@ -269,12 +273,12 @@ body {
 
 .popup-name {
   font-weight: 600;
+  letter-spacing: 0.015em;
 }
 
 .popup-region {
   display: flex;
   align-items: center;
-  margin-top: 2px;
   color: #555;
 }
 
@@ -316,16 +320,4 @@ body {
   height: 16px;
   width: 16px;
   cursor: pointer;
-}
-
-
-
-
-
-#bm-worldmap.theme-dark {
-  background: #000000;
-}
-
-#bm-worldmap.theme-light {
-  background: #ffffff;
 }
