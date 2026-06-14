@@ -22,37 +22,41 @@ document.addEventListener('DOMContentLoaded', () => {
   map.touchZoomRotate.disableRotation();
   map.touchZoomRotate._tapDragZoom.disable();
 
-  // レイヤー順（下から上）
-  const LAYER_ORDER = ['countries', 'usaStates', 'chinaProvinces'];
+  const LAYER_ORDER = ['countries', 'usaStates', 'chinaProvinces', 'japanPrefectures'];
 
-  //
   const REGION_TO_SOURCE = {
     'USA States':      'usaStates',
     'China Provinces': 'chinaProvinces',
+    'Japan Prefectures': 'japanPrefectures',
   };
 
-  // GeoJSONデータ保持オブジェクト
+  const GEOJSON_REGIONS = {
+    ...Object.fromEntries(
+      Object.entries(REGION_TO_SOURCE).map(([region, key]) => [
+        region,
+        { key, codeProp: 'iso3166-2', nameProp: 'name' }
+      ])
+    ),
+    'Default': { key: 'countries', codeProp: 'name', nameProp: 'name' },
+  };
+
   const geojsonData = {};
 
-  // 色塗り管理オブジェクト: { [featureId]: { color, layerId } }
   const filledFeatures = {};
 
-  // フィーチャ検索インデックス: { [sourceKey]: Map<normalizedKey, feature> }
+  // { [sourceKey]: Map<normalizedKey, feature> }
   const featureIndex = {};
 
-  // 国リストの開閉状態を保持
   const expandedLists = {};
 
-  // ハイライトされた経線・緯線の管理 Map: key=uniqueId, value={ layerId, sourceId, degree }
+  // Map: key=uniqueId, value={ layerId, sourceId, degree }
   const highlightedLines = new Map();
 
-  // テーマ
   const themes = {
     light: { sea: '#fff' },
     dark: { sea: '#000' }
   };
 
-  // 言語
   let currentLang = 'en';
 
   const COPY_ICON = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -91,20 +95,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const zoomOutLeft  = document.getElementById('zoom-out-left');
   const zoomOutRight = document.getElementById('zoom-out-right');
   const aimOverlay = document.getElementById('aim-overlay')
+  const locDisplay = document.getElementById('loc-display');
 
   // ==================
   // ユーティリティ関数
   // ==================
 
-  /** 文字列を正規化（前後空白除去・小文字化） */
   function normalize(name) {
     return name.trim().toLowerCase();
   }
 
-  /** フィーチャのプロパティから地域名を返す */
   function getRegion(properties, key) {
     if (key === 'usaStates') return 'USA States';
     if (key === 'chinaProvinces') return 'China Provinces';
+    if (key === 'japanPrefectures') return 'Japan Prefectures';
     const isoCode = properties['name'] || properties['ISO3166-1-Alpha-2'];
     const n = normalize(properties.name || '');
     for (const [region, list] of Object.entries(countryRegions)) {
@@ -114,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return 'Default';
   }
 
-  /** フィーチャIDを取得（usaStates は state_code、それ以外は name） */
   function getFeatureId(key, feature) {
     if (key === 'countries') {
       return feature.properties.name;
@@ -122,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return feature.properties['iso3166-2'] || feature.properties.name;
   }
 
-  /** GeoJSONロード後にインデックスを構築する */
   function buildFeatureIndex(key, data) {
     const index = new Map();
     data.features.forEach(feature => {
@@ -138,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     featureIndex[key] = index;
   }
 
-  /** 名前またはコードからフィーチャを検索 */
   function findFeatureByName(name, sources = LAYER_ORDER) {
     const n = normalize(name);
     for (const sourceKey of sources) {
@@ -148,20 +149,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  //
   function getSourcesForRegion(region) {
     const source = REGION_TO_SOURCE[region];
     return source ? [source] : undefined;
   }
 
-  // ひらがな→カナ変換
   function toKatakana(str) {
     return str.replace(/[\u3041-\u3096]/g, ch =>
       String.fromCharCode(ch.charCodeAt(0) + 0x60)
     );
   }
 
-  // クリップボードへコピー
   async function copyToClipboard(button, text) {
     if (button.dataset.copying) return;
     try {
@@ -181,19 +179,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // 色塗り操作
   // ==================
 
-  /** フィーチャに色を塗り、filledFeatures に登録する */
   function fillFeature(key, featureId, color) {
     filledFeatures[featureId] = { color, layerId: key };
     map.setFeatureState({ source: key, id: featureId }, { fillColor: color });
   }
 
-  /** フィーチャの色塗りを解除し、filledFeatures から削除する */
   function clearFeature(key, featureId) {
     delete filledFeatures[featureId];
     map.removeFeatureState({ source: key, id: featureId });
   }
 
-  /** ある地域に属する全フィーチャに対して操作を行う共通処理 */
   function applyToRegionFeatures(region, callback) {
     LAYER_ORDER.forEach(key => {
       const data = geojsonData[key];
@@ -210,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // マップ操作
   // ==================
 
-  /** 座標を 0–360° 系にシフトする補助関数 */
   function shiftGeometry(coords, type) {
     const shift = c => [c[0] < 0 ? c[0] + 360 : c[0], c[1]];
     if (type === 'Point')                          return shift(coords);
@@ -220,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return coords;
   }
 
-  /** フィーチャにズームインする */
   const ZOOM_LEVELS = [
     [5_000_000, 3], [1_000_000, 4], [100_000, 5], [10_000, 6],
     [1_000, 7], [100, 8], [10, 9], [5, 10], [1, 11], [0.5, 12], [0.1, 13], [0.05, 14]
@@ -248,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
     map.flyTo({ center, zoom, duration: 1000 });
   }
 
-  /** レイヤーの表示・非表示を切り替える */
   function setLayerVisibility(key, visible) {
     const visibility = visible ? 'visible' : 'none';
     ['fill', 'line'].forEach(type => {
@@ -257,7 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /** レイヤーの重ね順を整理する（LAYER_ORDER 順に再配置） */
   function reorderLayers() {
     LAYER_ORDER.forEach(key => {
       ['fill', 'line'].forEach(type => {
@@ -304,16 +295,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const feature   = e.features[0];
     const props     = feature.properties;
     const featureId = getFeatureId(key, feature);
-    const id        = featureId || props.id || props.name || props.NAME;
     const name      = props.name || props.NAME || props.ADMIN || props.ADMIN_EN || 'Unknown';
     const region    = getRegion(props, key);
     const fillColor = regionColors[region] || regionColors.Default;
 
-    if (!filledFeatures[id]) {
-      fillFeature(key, id, fillColor);
+    if (!filledFeatures[featureId]) {
+      fillFeature(key, featureId, fillColor);
       updateProgress(getCurrentRegionQuery());
     } else {
-      createResetPopup(key, id, name, region, e.lngLat);
+      createResetPopup(key, featureId, name, region, e.lngLat);
     }
   }
 
@@ -359,12 +349,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function registerLineClickEvents() {
+    const topLayers = LAYER_ORDER.flatMap(k => [`${k}-fill`, `${k}-line`]);
     ['meridians-line-hitarea', 'parallels-line-hitarea', 'dateLine-line-hitarea'].forEach(layerId => {
       const isDateLine = layerId === 'dateLine-line-hitarea';
 
       map.on('click', layerId, e => {
         const topFeatures = map.queryRenderedFeatures(e.point, {
-          layers: ['countries-fill', 'countries-line', 'usaStates-fill', 'usaStates-line']
+          layers: topLayers
         });
         if (topFeatures.length > 0 || !e.features.length) return;
 
@@ -397,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       map.on('mousemove', layerId, e => {
         const topFeatures = map.queryRenderedFeatures(e.point, {
-          layers: ['countries-fill', 'countries-line', 'usaStates-fill', 'usaStates-line']
+          layers: topLayers
         });
         map.getCanvas().style.cursor = topFeatures.length === 0 ? 'pointer' : '';
       });
@@ -455,7 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
     else layersPanel.querySelector(`#layer_${key}`).checked = true;
   }
 
-  // 経線・緯線
   function generateMeridiansParallels() {
     const meridians = { type: 'FeatureCollection', features: [] };
     const parallels = { type: 'FeatureCollection', features: [] };
@@ -491,7 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 日付変更線
   function addLineLayer(key, data) {
     map.addSource(key, { type: 'geojson', data });
     map.addLayer({
@@ -561,7 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // レイヤーコントロール UI
   // ==================
 
-  // GeoJSON レイヤーのチェックボックス
   LAYER_ORDER.forEach(key => {
     const cb = layersPanel.querySelector(`#layer_${key}`);
     cb?.addEventListener('change', e => {
@@ -695,7 +683,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // メニュー開閉
   // ==================
 
-  // z-indexの動的管理
   let topZIndex = 10;
   function bringToFront(element) {
     element.style.zIndex = ++topZIndex;
@@ -930,7 +917,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 進捗表示
   // ==================
 
-  /** 検索クエリにマッチする地域名の配列を返す */
   function getMatchedRegions(query) {
     const searchTerms = query.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
     if (searchTerms.length === 0) return [];
@@ -947,23 +933,11 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  /** 地域に属する国リストを返す */
   function buildCountryList(region) {
     const filledIds = new Set(Object.keys(filledFeatures).map(normalize));
 
-    // GeoJSONから直接収集する地域
-    const geoJsonRegions = {
-      ...Object.fromEntries(
-        Object.entries(REGION_TO_SOURCE).map(([region, key]) => [
-          region,
-          { key, codeProp: 'iso3166-2', nameProp: 'name' }
-        ])
-      ),
-      'Default': { key: 'countries', codeProp: 'name', nameProp: 'name' },
-    };
-
-    if (geoJsonRegions[region]) {
-      const { key, codeProp, nameProp } = geoJsonRegions[region];
+    if (GEOJSON_REGIONS[region]) {
+      const { key, codeProp, nameProp } = GEOJSON_REGIONS[region];
       const items = [];
       const seenCodes = new Set();
       geojsonData[key]?.features?.forEach(f => {
@@ -982,14 +956,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }));
     }
 
-    // countryRegionsから収集する地域
     return countryRegions[region].map(country => {
       const displayName = getDisplayName(country);
       return { name: displayName, code: country, filled: filledIds.has(normalize(country)) };
     });
   }
 
-  /** Commands セクションのHTMLを生成する */
   function buildCommandsSectionHTML() {
     const raw = searchInput.value;
     const activeCommands = commands
@@ -1028,7 +1000,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  /** 地域セクション1件分のHTMLを生成する */
   function buildRegionSectionHTML(region) {
     const countryList = buildCountryList(region);
     const filledCount = countryList.filter(c => c.filled).length;
@@ -1052,7 +1023,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  /** マッチした地域リストから進捗表示用のHTML文字列を生成する */
   function buildProgressHTML(matchedRegions) {
     return matchedRegions.map(region =>
       region === 'Commands'
@@ -1061,7 +1031,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ).join('');
   }
 
-  /** progressDisplay にイベントを登録する */
   function attachProgressEvents() {
     progressDisplay.addEventListener('click', e => {
       // .region-progress のクリック
@@ -1078,7 +1047,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // .toggle-list-btn のクリック
       const toggleBtn = e.target.closest('.toggle-list-btn');
       if (toggleBtn) {
         const listEl = document.getElementById(toggleBtn.dataset.target);
@@ -1089,18 +1057,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // コマンドコピー
       const copyBtn = e.target.closest('.copy-btn');
       if (copyBtn) {
         copyToClipboard(copyBtn, copyBtn.dataset.copy);
         return;
       }
 
-      // 国名 div のクリック
       const countryDiv = e.target.closest('[id^="country-list-"] div');
       if (countryDiv) {
         if (!countryDiv.dataset.code) return;
-        const countryCode = countryDiv.dataset.code || countryDiv.textContent.trim();
+        const countryCode = countryDiv.dataset.code;
         const regionId = countryDiv.closest('[id^="country-list-"]').id.replace('country-list-', '').replace(/-/g, ' ');
         const region = Object.keys(countryRegions).find(r => r.toLowerCase() === regionId.toLowerCase()) || 'Default';
         const feature = findFeatureByName(countryCode, getSourcesForRegion(region));
@@ -1126,11 +1092,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /** 進捗表示を更新する **/
   function updateProgress(regionQuery) {
     if (!regionQuery) { progressDisplay.innerHTML = ''; return; }
 
-    // スクロール位置を保存
     const scrollPositions = {};
     progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
       scrollPositions[list.id] = list.scrollTop;
@@ -1145,7 +1109,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     progressDisplay.innerHTML = buildProgressHTML(matchedRegions);
 
-    // スクロール位置を復元
     progressDisplay.querySelectorAll('[id^="country-list-"]').forEach(list => {
       if (scrollPositions[list.id] !== undefined) list.scrollTop = scrollPositions[list.id];
     });
