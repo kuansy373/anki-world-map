@@ -18,10 +18,6 @@
     <!-- 地図を表示するコンテナ -->
     <div id="bm-worldmap"></div>
 
-    <!-- コマンドで表示されるもの -->
-    <div id="aim-overlay"></div>
-    <div id="loc-display"></div>
-
     <!-- 検索ボックス -->
     <button id="search-toggle">🔍</button>
 
@@ -31,16 +27,6 @@
         <button id="close-button" class="close-button">✕</button>
       </div>
       <div id="progress-display" class="progress-display"></div>
-    </div>
-
-    <!-- ズームボタン -->
-    <div id="zoom-controls-left" class="zoom-controls zoom-left" style="display:none;">
-      <button class="zoom-btn" id="zoom-in-left">+</button>
-      <button class="zoom-btn" id="zoom-out-left">−</button>
-    </div>
-    <div id="zoom-controls-right" class="zoom-controls zoom-right" style="display:none;">
-      <button class="zoom-btn" id="zoom-in-right">+</button>
-      <button class="zoom-btn" id="zoom-out-right">−</button>
     </div>
 
     <!-- メニュー -->
@@ -83,8 +69,18 @@
       <div id="region-control" class="menu-panel" style="display:none;"></div>
     </div>
 
-    <!-- Regionsパネル -->
-    <div id="region-control" class="menu-panel" style="display:none;"></div>
+
+    <!-- コマンドで表示されるもの -->
+    <div id="zoom-controls-left" class="zoom-controls zoom-left">
+      <button class="zoom-btn" id="zoom-in-left">+</button>
+      <button class="zoom-btn" id="zoom-out-left">−</button>
+    </div>
+    <div id="zoom-controls-right" class="zoom-controls zoom-right">
+      <button class="zoom-btn" id="zoom-in-right">+</button>
+      <button class="zoom-btn" id="zoom-out-right">−</button>
+    </div>
+    <div id="aim-overlay"></div>
+    <div id="loc-display"></div>
 
     <!-- ライブラリ -->
     <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>

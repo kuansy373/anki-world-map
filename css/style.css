@@ -137,8 +137,8 @@ body {
   z-index: 9;
 }
 
-.zoom-left  { left: 0; }
-.zoom-right { right: 0; }
+.zoom-left  { left: 0;  display: none; }
+.zoom-right { right: 0; display: none; }
 
 .zoom-btn {
   width: 44px;

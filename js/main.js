@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'Japan Prefectures': 'japanPrefectures',
   };
 
+  const SOURCE_KEY_TO_REGION = Object.fromEntries(
+    Object.entries(REGION_TO_SOURCE).map(([region, sourceKey]) => [sourceKey, region])
+  );
+
   const GEOJSON_REGIONS = {
     ...Object.fromEntries(
       Object.entries(REGION_TO_SOURCE).map(([region, key]) => [
@@ -106,9 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getRegion(properties, key) {
-    if (key === 'usaStates') return 'USA States';
-    if (key === 'chinaProvinces') return 'China Provinces';
-    if (key === 'japanPrefectures') return 'Japan Prefectures';
+    if (SOURCE_KEY_TO_REGION[key]) return SOURCE_KEY_TO_REGION[key];
     const isoCode = properties['name'] || properties['ISO3166-1-Alpha-2'];
     const n = normalize(properties.name || '');
     for (const [region, list] of Object.entries(countryRegions)) {
@@ -155,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function copyToClipboard(button, text) {
     if (button.dataset.copying) return;
+    button.dataset.copying = 'true';
     try {
-      button.dataset.copying = 'true';
       await navigator.clipboard.writeText(text);
       button.innerHTML = '✓';
       setTimeout(() => {
@@ -234,9 +236,11 @@ document.addEventListener('DOMContentLoaded', () => {
     map.flyTo({ center, zoom, duration: 1000 });
   }
 
+  const LAYER_TYPES = ['fill', 'line'];
+
   function setLayerVisibility(key, visible) {
     const visibility = visible ? 'visible' : 'none';
-    ['fill', 'line'].forEach(type => {
+    LAYER_TYPES.forEach(type => {
       const layerId = `${key}-${type}`;
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', visibility);
     });
@@ -244,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function reorderLayers() {
     LAYER_ORDER.forEach(key => {
-      ['fill', 'line'].forEach(type => {
+      LAYER_TYPES.forEach(type => {
         const layerId = `${key}-${type}`;
         if (map.getLayer(layerId)) map.moveLayer(layerId);
       });
@@ -258,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function isCoveredByUpperLayer(key, point) {
     const upperLayers = LAYER_ORDER.slice(LAYER_ORDER.indexOf(key) + 1).map(k => `${k}-fill`);
-    return upperLayers.some(l => map.queryRenderedFeatures(point, { layers: [l] }).length > 0);
+    return map.queryRenderedFeatures(point, { layers: upperLayers }).length > 0;
   }
 
   function createResetPopup(key, id, name, region, lngLat) {
@@ -451,44 +455,30 @@ document.addEventListener('DOMContentLoaded', () => {
     return { meridians, parallels };
   }
 
-  function addGridLayers(gridData) {
-    ['meridians', 'parallels'].forEach(key => {
-      map.addSource(key, { type: 'geojson', data: gridData[key] });
-
-      map.addLayer({
-        id: `${key}-line-hitarea`,
-        type: 'line',
-        source: key,
-        paint: { 'line-color': 'rgba(0,0,0,0)', 'line-width': 10 },
-        layout: { visibility: 'none' }
-      });
-
-      map.addLayer({
-        id: `${key}-line`,
-        type: 'line',
-        source: key,
-        paint: { 'line-color': '#888', 'line-width': 1 },
-        layout: { visibility: 'none' }
-      });
-    });
-  }
-
-  function addLineLayer(key, data) {
+  function addLineLayerPair(key, data, options = {}) {
     map.addSource(key, { type: 'geojson', data });
     map.addLayer({
       id: `${key}-line-hitarea`,
       type: 'line',
       source: key,
       paint: { 'line-color': 'rgba(0,0,0,0)', 'line-width': 10 },
-      layout: { visibility: 'none' }
+      layout: { visibility: options.visibility ?? 'none' }
     });
     map.addLayer({
       id: `${key}-line`,
       type: 'line',
       source: key,
       paint: { 'line-color': '#888', 'line-width': 1 },
-      layout: { visibility: 'none' }
+      layout: { visibility: options.visibility ?? 'none' }
     });
+  }
+
+  function addGridLayers(gridData) {
+    ['meridians', 'parallels'].forEach(key => addLineLayerPair(key, gridData[key]));
+  }
+
+  function addLineLayer(key, data) {
+    addLineLayerPair(key, data);
   }
 
   const addLayerFn = {
@@ -554,11 +544,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cb = layersPanel.querySelector(`#layer_${key}`);
     cb?.addEventListener('change', e => {
       const visibility = e.target.checked ? 'visible' : 'none';
-
-      if (map.getLayer(`${key}-line`)) {
-        map.setLayoutProperty(`${key}-line`, 'visibility', visibility);
-        map.setLayoutProperty(`${key}-line-hitarea`, 'visibility', visibility);
-      }
+      [`${key}-line`, `${key}-line-hitarea`].forEach(layerId => {
+        if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', visibility);
+      });
     });
   });
 
@@ -636,15 +624,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 言語コントロール UI
   // ==================
 
-  // 英語-日本語切り替え
   function updateButtonTexts() {
     document.querySelectorAll('[data-en][data-ja]').forEach(el => {
       const text = currentLang === 'ja' ? el.dataset.ja : el.dataset.en;
-      if (el.tagName === 'INPUT') {
-        el.placeholder = text;
-      } else {
-        el.textContent = text;
-      }
+      if (el.tagName === 'INPUT') el.placeholder = text;
+      else el.textContent = text;
     });
   }
   updateButtonTexts();
@@ -718,8 +702,9 @@ document.addEventListener('DOMContentLoaded', () => {
   menuToggle.addEventListener('click', e => {
     e.stopPropagation();
     const isOpen = menuTop.style.display !== 'none';
-    menuTop.style.display = isOpen ? 'none' : 'flex';
-    menuBottom.style.display = isOpen ? 'none' : 'flex';
+    const display = isOpen ? 'none' : 'flex';
+    menuTop.style.display = display;
+    menuBottom.style.display = display;
     bringToFront(menuContainer);
     if (isOpen) {
       hidePanels();
@@ -913,16 +898,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchTerms = query.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
     if (searchTerms.length === 0) return [];
     const allRegions = [...Object.keys(countryRegions), 'Default', 'Commands'];
-    return allRegions.filter(region =>
-      searchTerms.some(term => {
+    return allRegions.filter(region => {
+      const displayName = getRegionDisplayName(region);
+      return searchTerms.some(term => {
         const termKana = toKatakana(term);
         return (
           region.toLowerCase().includes(term) ||
-          getRegionDisplayName(region).toLowerCase().includes(term) ||
-          toKatakana(getRegionDisplayName(region)).includes(termKana)
+          displayName.toLowerCase().includes(term) ||
+          toKatakana(displayName).includes(termKana)
         );
-      })
-    );
+      });
+    });
   }
 
   function buildCountryList(region) {
