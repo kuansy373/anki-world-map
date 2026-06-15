@@ -119,23 +119,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getFeatureId(key, feature) {
-    if (key === 'countries') {
-      return feature.properties.name;
-    }
-    return feature.properties['iso3166-2'] || feature.properties.name;
+    if (key === 'countries') return feature.properties.name;
+    return feature.properties.id;
   }
 
   function buildFeatureIndex(key, data) {
     const index = new Map();
     data.features.forEach(feature => {
-      const props = feature.properties;
-      const candidates = [
-        props.name, props.NAME, props.ADMIN, props.ADMIN_EN,
-        props.state_code, props['ISO3166-1-Alpha-2'], props['iso3166-2']
-      ];
-      candidates.forEach(v => {
-        if (v) index.set(normalize(v), feature);
-      });
+      const { name, id } = feature.properties;
+      if (name) index.set(normalize(name), feature);
+      if (id)   index.set(normalize(id),   feature);
     });
     featureIndex[key] = index;
   }
@@ -295,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const feature   = e.features[0];
     const props     = feature.properties;
     const featureId = getFeatureId(key, feature);
-    const name      = props.name || props.NAME || props.ADMIN || props.ADMIN_EN || 'Unknown';
+    const name = props.name || 'Unknown';
     const region    = getRegion(props, key);
     const fillColor = regionColors[region] || regionColors.Default;
 
@@ -417,8 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     map.addSource(key, {
       type: 'geojson',
       data,
-      promoteId: key === 'countries' ? 'name' : 'iso3166-2'
-
+      promoteId: key === 'countries' ? 'name' : 'id'
     });
 
     map.addLayer({
