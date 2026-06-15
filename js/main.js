@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ...Object.fromEntries(
       Object.entries(REGION_TO_SOURCE).map(([region, key]) => [
         region,
-        { key, codeProp: 'iso3166-2', nameProp: 'name' }
+        { key, codeProp: 'id', nameProp: 'name' }
       ])
     ),
     'Default': { key: 'countries', codeProp: 'name', nameProp: 'name' },
