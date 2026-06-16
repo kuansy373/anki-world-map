@@ -48,17 +48,12 @@ The following third-party components are included under their respective license
       - All data is licensed under the Open Data Commons Public Domain Dedication and License.
       - https://github.com/datasets/geo-countries
 
-   -2. geo-admin1-us
-      - All data is licensed under the Open Data Commons Public Domain Dedication and License.
-      - https://github.com/datasets/geo-admin1-us
+   -2. Administrative divisions (USA States, China Provinces)
+      - Public Domain (Natural Earth)
+      - https://github.com/nvkelso/natural-earth-vector
+      - Source: ne_10m_admin_1_states_provinces.geojson
 
-   -3. cn-atlas
-      - ISC License
-      - Copyright (c) Amll
-      - https://github.com/BarbarossaWang/cn-atlas
-      - Data source: ruiduobao/shengshixian.com
-
-   -4. jp-prefectures
-      - MIT License
-      - Copyright (c) piuccio
-      - https://github.com/piuccio/open-data-jp-prefectures-geojson
+   -3. Natural Earth (International Date Line)
+      - Public Domain
+      - https://www.naturalearthdata.com/
+      - Source: ne_110m_geographic_lines
