@@ -48,7 +48,7 @@ The following third-party components are included under their respective license
       - All data is licensed under the Open Data Commons Public Domain Dedication and License.
       - https://github.com/datasets/geo-countries
 
-   -2. Administrative divisions (USA States, China Provinces)
+   -2. Administrative divisions
       - Public Domain (Natural Earth)
       - https://github.com/nvkelso/natural-earth-vector
       - Source: ne_10m_admin_1_states_provinces.geojson
