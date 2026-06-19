@@ -1,7 +1,7 @@
 import { setLang, updateButtonTexts } from './lang.js';
 import { initCommands, commands, parseInput, getCurrentRegionQuery, applyCommands } from './commands.js';
 import { initMapLayers } from './map-layers.js';
-import { initMapEvents, registerClickEvents } from './map-events.js';
+import { initMapEvents, registerClickEvents, refreshOpenPopups } from './map-events.js';
 import { initProgress, updateProgress, attachProgressEvents } from './progress.js';
 import { initMenuUI, updateRegionControlTexts, bringToFront } from './menu-ui.js';
 
@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     getCurrentRegionQuery,
     onLanguageChange: (lang) => {
       setLang(lang);
+      refreshOpenPopups();
       updateProgress(getCurrentRegionQuery());
       updateRegionControlTexts();
       updateButtonTexts(lang);

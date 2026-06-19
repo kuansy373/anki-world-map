@@ -9,6 +9,7 @@ import { geojsonData, filledFeatures, fillFeature, clearFeature } from './map-la
 let map;
 let _updateProgress;
 let _getCurrentRegionQuery;
+const openCountryPopups = new Map();
 
 // ==================
 // ユーティリティ
@@ -24,26 +25,40 @@ function isCoveredByUpperLayer(key, point) {
 // ==================
 
 function createResetPopup(key, id, name, region, lngLat) {
+  if (openCountryPopups.has(id)) {
+    openCountryPopups.get(id).popup.remove();
+    openCountryPopups.delete(id);
+    return;
+  }
+
   const popup = new maplibregl.Popup()
     .setLngLat(lngLat)
-    .setHTML(`
-      <div class="popup-content">
-        <div class="popup-name">${getDisplayName(name)}</div>
-        <div class="popup-region">
-          <span>${getRegionDisplayName(region)}</span>
-          <button id="resetColorBtn" class="popup-reset-btn"></button>
-        </div>
-      </div>
-    `)
+    .setHTML(buildCountryPopupHTML(name, region, id))
     .addTo(map);
 
+  openCountryPopups.set(id, { popup, key, name, region });
+  popup.on('close', () => openCountryPopups.delete(id));
+
   setTimeout(() => {
-    document.getElementById('resetColorBtn')?.addEventListener('click', () => {
-      clearFeature(key, id);
-      popup.remove();
-      _updateProgress(_getCurrentRegionQuery());
-    });
+    popup.getElement().querySelector('.popup-reset-btn')
+      ?.addEventListener('click', () => {
+        clearFeature(key, id);
+        popup.remove();
+        _updateProgress(_getCurrentRegionQuery());
+      });
   }, 0);
+}
+
+function buildCountryPopupHTML(name, region, id) {
+  return `
+    <div class="popup-content">
+      <div class="popup-name">${getDisplayName(name)}</div>
+      <div class="popup-region">
+        <span>${getRegionDisplayName(region)}</span>
+        <button class="popup-reset-btn" data-feature-id="${id}"></button>
+      </div>
+    </div>
+  `;
 }
 
 // ==================
@@ -142,9 +157,11 @@ function registerLineClickEvents() {
       map.addSource(hlSourceId, { type: 'geojson', data: highlightFeature });
       map.addLayer({ id: hlLayerId, type: 'line', source: hlSourceId, paint: { 'line-color': '#ff7171', 'line-width': 1.5 } });
       map.moveLayer(hlLayerId);
-      highlightedLines.set(uniqueId, { layerId: hlLayerId, sourceId: hlSourceId });
-
-      new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<strong>${label}</strong>`).addTo(map);
+      const linePopup = new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`<strong>${label}</strong>`)
+        .addTo(map);
+      highlightedLines.set(uniqueId, { layerId: hlLayerId, sourceId: hlSourceId, label, lngLat: e.lngLat, popup: linePopup });
     });
 
     map.on('mousemove', layerId, e => {
@@ -154,6 +171,38 @@ function registerLineClickEvents() {
 
     map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
   });
+}
+
+export function refreshOpenPopups() {
+  for (const [id, { popup, key, name, region }] of openCountryPopups) {
+    popup.setHTML(buildCountryPopupHTML(name, region, id));
+    popup.getElement().querySelector('.popup-reset-btn')
+      ?.addEventListener('click', () => {
+        clearFeature(key, id);
+        popup.remove();
+        _updateProgress(_getCurrentRegionQuery());
+      });
+  }
+
+  for (const [uniqueId, info] of highlightedLines) {
+    if (!info.popup) continue;
+    const newLabel = relabelLine(uniqueId);
+    info.popup.setHTML(`<strong>${newLabel}</strong>`);
+    info.label = newLabel;
+  }
+}
+
+function relabelLine(uniqueId) {
+  if (uniqueId === 'date_line') return getDisplayName('International Date Line');
+  if (uniqueId.startsWith('lon_')) {
+    const deg = uniqueId.slice(4);
+    return getDisplayName('Lng: ') + deg + '°';
+  }
+  if (uniqueId.startsWith('lat_')) {
+    const deg = uniqueId.slice(4);
+    return getDisplayName('Lat: ') + deg + '°';
+  }
+  return uniqueId;
 }
 
 // ==================
