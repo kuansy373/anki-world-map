@@ -143,7 +143,7 @@ async function fetchGeoJSON(key, url) {
 export function addLayerToMap(key, data) {
   map.addSource(key, {
     type: 'geojson',
-    buffer: 256,
+    buffer: 128, // default: 128
     data,
     promoteId: key === 'countries' ? 'name' : 'id'
   });
