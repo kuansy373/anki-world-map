@@ -144,6 +144,7 @@ export function addLayerToMap(key, data) {
   map.addSource(key, {
     type: 'geojson',
     buffer: 128, // default: 128
+    tolerance: 0.475, // default: 0.375
     data,
     promoteId: key === 'countries' ? 'name' : 'id'
   });
