@@ -1,7 +1,7 @@
 # oboeru-blank-map
 
 国名を覚えるための白地図です。
-> https://kuansy373.github.io/anki-world-map/
+> https://kuansy373.github.io/oboeru-blank-map/
 
 ### **コマンドについて**
 - 右上の虫眼鏡ボタンで表示される地域名検索欄から入力できます。
