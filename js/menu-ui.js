@@ -117,47 +117,90 @@ function initLayersPanel() {
 // 地域コントロール UI
 // ==================
 
+const nestedChildren = {
+  Asia: ['China Provinces', 'Japan Prefectures'],
+  'North America': ['USA States'],
+};
+
+const childRegions = new Set(Object.values(nestedChildren).flat());
+
 export function buildRegionControl() {
   regionControl.innerHTML = '';
 
   Object.entries(regionColors).forEach(([region, color]) => {
-    const regionItem = document.createElement('div');
-    regionItem.className    = 'region-item';
-    regionItem.dataset.region = region;
+    if (childRegions.has(region)) return;
 
-    const colorBox = document.createElement('span');
-    colorBox.className        = 'color-box';
-    colorBox.style.background = color;
-
-    const label = document.createElement('span');
-    label.textContent = getRegionDisplayName(region);
-
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'reset-btn';
-
-    colorBox.addEventListener('click', e => {
-      e.stopPropagation();
-      applyToRegionFeatures(region, (key, fId) => fillFeature(key, fId, color));
-      updateProgress(getCurrentRegionQuery());
-    });
-
-    label.addEventListener('click', e => {
-      e.stopPropagation();
-      e.preventDefault();
-      const view = regionView[region];
-      if (view) map.flyTo({ center: view.center, zoom: view.zoom, speed: 0.8, curve: 1.2, essential: true });
-      else alert(`${getRegionDisplayName(region)} ${getMessage('noViewSettings')}`);
-    });
-
-    resetBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      applyToRegionFeatures(region, (key, fId) => clearFeature(key, fId));
-      updateProgress(getCurrentRegionQuery());
-    });
-
-    regionItem.append(colorBox, label, resetBtn);
+    const regionItem = createRegionItem(region, color);
     regionControl.appendChild(regionItem);
+
+    if (nestedChildren[region]) {
+      const childContainer = document.createElement('div');
+      childContainer.className = 'region-children';
+
+      nestedChildren[region].forEach(childRegion => {
+        const childColor = regionColors[childRegion];
+        const childItem = createRegionItem(childRegion, childColor);
+        childItem.classList.add('region-child-item');
+        childContainer.appendChild(childItem);
+      });
+
+      childContainer.style.display = 'none';
+      regionControl.appendChild(childContainer);
+
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'toggle-children-btn';
+      toggleBtn.textContent = '▸';
+      toggleBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = childContainer.style.display !== 'none';
+        childContainer.style.display = isOpen ? 'none' : '';
+        toggleBtn.textContent = isOpen ? '▸' : '▾';
+        toggleBtn.style.opacity = isOpen ? '0.6' : '0.8';
+      });
+
+      const resetBtn = regionItem.querySelector('.reset-btn');
+      resetBtn.insertAdjacentElement('afterend', toggleBtn);
+    }
   });
+}
+
+function createRegionItem(region, color) {
+  const regionItem = document.createElement('div');
+  regionItem.className = 'region-item';
+  regionItem.dataset.region = region;
+
+  const colorBox = document.createElement('span');
+  colorBox.className = 'color-box';
+  colorBox.style.background = color;
+
+  const label = document.createElement('span');
+  label.textContent = getRegionDisplayName(region);
+
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'reset-btn';
+
+  colorBox.addEventListener('click', e => {
+    e.stopPropagation();
+    applyToRegionFeatures(region, (key, fId) => fillFeature(key, fId, color));
+    updateProgress(getCurrentRegionQuery());
+  });
+
+  label.addEventListener('click', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    const view = regionView[region];
+    if (view) map.flyTo({ center: view.center, zoom: view.zoom, speed: 0.8, curve: 1.2, essential: true });
+    else alert(`${getRegionDisplayName(region)} ${getMessage('noViewSettings')}`);
+  });
+
+  resetBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    applyToRegionFeatures(region, (key, fId) => clearFeature(key, fId));
+    updateProgress(getCurrentRegionQuery());
+  });
+
+  regionItem.append(colorBox, label, resetBtn);
+  return regionItem;
 }
 
 export function updateRegionControlTexts() {

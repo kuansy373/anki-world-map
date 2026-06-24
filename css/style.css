@@ -269,12 +269,12 @@ body {
 .region-item {
   display: flex;
   align-items: center;
-  margin-bottom: 4px;
-  cursor: pointer;
+  margin-bottom: 5px;
 }
 
 .region-item span {
   font-size: 16px;
+  cursor: pointer;
 }
 
 .color-box {
@@ -293,6 +293,24 @@ body {
   height: 16px;
   width: 16px;
   cursor: pointer;
+}
+
+.region-children {
+  padding-left: 16px;
+}
+
+.toggle-children-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 0 7px 0 0;
+  font-size: 23px;
+  line-height: 1;
+  color: #704e94;
+  opacity: 0.6;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 
