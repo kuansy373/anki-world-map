@@ -129,7 +129,7 @@ body {
 
 #menu-top button.active,
 #menu-bottom button.active {
-  border-color: #e0dfdf;
+  border-color: #ccc;
   border-radius: 3px;
   border-style: groove;
 }
