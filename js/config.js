@@ -15,10 +15,10 @@ export const GEOJSON_REGIONS = {
   ...Object.fromEntries(
     Object.entries(REGION_TO_SOURCE).map(([region, key]) => [
       region,
-      { key, codeProp: 'id', nameProp: 'name' }
+      { key, codeProp: 'id', nameProp: 'names' }
     ])
   ),
-  'Default': { key: 'countries', codeProp: 'name', nameProp: 'name' },
+  'Default': { key: 'countries', codeProp: 'id', nameProp: 'names' },
 };
 
 export const themes = {

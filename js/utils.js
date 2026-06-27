@@ -39,18 +39,15 @@ export async function copyToClipboard(button, text) {
 // フィーチャーID・地域判定
 // ==================
 
-export function getFeatureId(key, feature) {
-  if (key === 'countries') return feature.properties.name;
+export function getFeatureId(feature) {
   return feature.properties.id;
 }
 
 export function getRegion(properties, key) {
   if (SOURCE_KEY_TO_REGION[key]) return SOURCE_KEY_TO_REGION[key];
-  const isoCode = properties['name'] || properties['ISO3166-1-Alpha-2'];
-  const n = normalize(properties.name || '');
+  const isoCode = properties.id;
   for (const [region, list] of Object.entries(countryRegions)) {
     if (isoCode && list.includes(isoCode)) return region;
-    if (list.some(c => normalize(c) === n)) return region;
   }
   return 'Default';
 }

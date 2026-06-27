@@ -2,7 +2,7 @@ import { GEOJSON_REGIONS, COPY_ICON } from './config.js';
 import { normalize, toKatakana, copyToClipboard, getRegion } from './utils.js';
 import { getDisplayName, getRegionDisplayName } from './lang.js';
 import { countryRegions, regionColors } from './regions.js';
-import { geojsonData, filledFeatures, findFeatureByName, getSourcesForRegion, zoomToFeature } from './map-layers.js';
+import { geojsonData, filledFeatures, findFeatureById, getSourcesForRegion, zoomToFeature } from './map-layers.js';
 import { buildActiveCommandsString } from './commands.js';
 
 let progressDisplay;
@@ -57,8 +57,14 @@ function buildCountryList(region) {
     }));
   }
 
+  const codeToName = {};
+  const source = geojsonData.countries ?? geojsonData.countriesLow;
+  source?.features?.forEach(f => {
+    if (f.properties.id) codeToName[f.properties.id] = f.properties.names;
+  });
+
   return countryRegions[region].map(country => ({
-    name: getDisplayName(country),
+    name: getDisplayName(codeToName[country] || country),
     code: country,
     filled: filledIds.has(normalize(country))
   }));
@@ -166,7 +172,7 @@ export function attachProgressEvents() {
       const unfilled = countryList.filter(c => !c.filled).map(c => c.code);
       if (unfilled.length === 0) return;
       const randomName = unfilled[Math.floor(Math.random() * unfilled.length)];
-      const feature = findFeatureByName(randomName, getSourcesForRegion(region));
+      const feature = findFeatureById(randomName, getSourcesForRegion(region));
       if (feature) zoomToFeature(feature);
       return;
     }
@@ -191,10 +197,7 @@ export function attachProgressEvents() {
     if (countryDiv) {
       if (!countryDiv.dataset.code) return;
       const countryCode = countryDiv.dataset.code;
-      const regionId = countryDiv.closest('[id^="country-list-"]').id
-        .replace('country-list-', '').replace(/-/g, ' ');
-      const region = Object.keys(countryRegions).find(r => r.toLowerCase() === regionId.toLowerCase()) || 'Default';
-      const feature = findFeatureByName(countryCode, getSourcesForRegion(region));
+      const feature = findFeatureById(countryCode);
       if (feature) zoomToFeature(feature);
       else console.warn('国を特定できませんでした:', countryCode);
       return;

@@ -58,11 +58,19 @@ function buildCountryPopupHTML(name, region, id) {
 // クリックイベント
 // ==================
 
+function parseProperties(props) {
+  const result = { ...props };
+  if (typeof result.names === 'string') {
+    result.names = JSON.parse(result.names);
+  }
+  return result;
+}
+
 function toggleFeatureFill(key, e) {
   const feature   = e.features[0];
-  const props     = feature.properties;
-  const featureId = getFeatureId(key, feature);
-  const name      = props.name || 'Unknown';
+  const props = parseProperties(feature.properties);
+  const featureId = getFeatureId(feature);
+  const name      = props.names || 'Unknown';
   const region    = getRegion(props, key);
   const fillColor = regionColors[region] || regionColors.Default;
 
@@ -86,7 +94,7 @@ function registerCountryClickEvents() {
   LAYER_ORDER.forEach(key => {
     map.on('click', `${key}-fill`, e => {
       if (isCoveredByUpperLayer(key, e.point)) return;
-      const featureId = getFeatureId(key, e.features[0]);
+      const featureId = getFeatureId(e.features[0]);
       closeAllPopupsExcept(featureId);
       toggleFeatureFill(key, e);
     });

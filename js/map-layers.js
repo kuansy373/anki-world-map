@@ -1,6 +1,6 @@
 import { LAYER_ORDER, REGION_TO_SOURCE, ZOOM_LEVELS, themes } from './config.js';
 import { normalize, getRegion, getFeatureId } from './utils.js';
-import { geoUrls } from './regions.js';
+import { geoPaths } from './regions.js';
 
 // ==================
 // モジュール内状態
@@ -22,15 +22,14 @@ const featureIndex = {};
 export function buildFeatureIndex(key, data) {
   const index = new Map();
   data.features.forEach(feature => {
-    const { name, id } = feature.properties;
-    if (name) index.set(normalize(name), feature);
-    if (id)   index.set(normalize(id),   feature);
+    const { id } = feature.properties;
+    if (id) index.set(normalize(id), feature);
   });
   featureIndex[key] = index;
 }
 
-export function findFeatureByName(name, sources = LAYER_ORDER) {
-  const n = normalize(name);
+export function findFeatureById(id, sources = LAYER_ORDER) {
+  const n = normalize(id);
   for (const sourceKey of sources) {
     const feature = featureIndex[sourceKey]?.get(n);
     if (feature) return feature;
@@ -63,7 +62,7 @@ export function applyToRegionFeatures(region, callback) {
     if (!data?.features) return;
     data.features.forEach(f => {
       if (getRegion(f.properties, key) !== region) return;
-      const fId = getFeatureId(key, f);
+      const fId = getFeatureId(f);
       if (fId) callback(key, fId, f);
     });
   });
@@ -133,9 +132,14 @@ export function reorderLayers() {
 // GeoJSONフェッチ・レイヤー追加
 // ==================
 
-async function fetchGeoJSON(key, url) {
-  const res = await fetch(url);
+async function fetchGeoJSON(key, path) {
+  const res = await fetch(path);
   const data = await res.json();
+  data.features.forEach(f => {
+    if (typeof f.properties.names === 'string') {
+      f.properties.names = JSON.parse(f.properties.names);
+    }
+  });
   geojsonData[key] = data;
   return { key, data };
 }
@@ -146,7 +150,7 @@ export function addLayerToMap(key, data) {
     buffer: 128, // default: 128
     tolerance: 0.475, // default: 0.375
     data,
-    promoteId: key === 'countries' ? 'name' : 'id'
+    promoteId: 'id'
   });
 
   map.addLayer({
@@ -233,7 +237,7 @@ export function initMapLayers(_map, _mapContainer, _layersPanel, registerClickEv
     _mapContainer.classList.add('theme-light');
   });
 
-  const initialFetch = fetchGeoJSON('countriesLow', geoUrls.initial.countriesLow);
+  const initialFetch = fetchGeoJSON('countriesLow', geoPaths.initial.countriesLow);
   const mapLoaded = new Promise(resolve => map.on('load', resolve));
 
   Promise.all([mapLoaded, initialFetch])
@@ -244,8 +248,8 @@ export function initMapLayers(_map, _mapContainer, _layersPanel, registerClickEv
       addGridLayers(generateMeridiansParallels());
       registerClickEvents();
 
-      Object.entries(geoUrls.background).forEach(([key, { url, type }]) => {
-        fetchGeoJSON(key, url).then(() => {
+      Object.entries(geoPaths.background).forEach(([key, { path, type }]) => {
+        fetchGeoJSON(key, path).then(() => {
           if (key === 'countries') {
             map.getSource('countries').setData(geojsonData.countries);
             buildFeatureIndex('countries', geojsonData.countries);
