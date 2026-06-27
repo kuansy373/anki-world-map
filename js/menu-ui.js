@@ -33,7 +33,7 @@ function setMenuVisible(visible) {
 function setToggleStyle(state) {
   if (state === 'open') {
     domRefs.menuToggle.style.border = '';
-    domRefs.menuToggle.style.borderStyle  = 'double';
+    domRefs.menuToggle.style.borderStyle = 'double';
   } else if (state === 'locked') {
     domRefs.menuToggle.style.border = '2px groove #e0dfdf';
     domRefs.menuToggle.textContent = '✕';
@@ -150,34 +150,36 @@ export function buildRegionControl() {
     domRefs.regionControl.appendChild(regionItem);
 
     if (nestedChildren[region]) {
-      const childContainer = document.createElement('div');
-      childContainer.className = 'region-children';
-
-      nestedChildren[region].forEach(childRegion => {
-        const childColor = regionColors[childRegion];
-        const childItem = createRegionItem(childRegion, childColor);
-        childItem.classList.add('region-child-item');
-        childContainer.appendChild(childItem);
-      });
-
-      childContainer.style.display = 'none';
-      domRefs.regionControl.appendChild(childContainer);
-
-      const toggleBtn = document.createElement('button');
-      toggleBtn.className = 'toggle-children-btn';
-      toggleBtn.textContent = '▸';
-      toggleBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        const isOpen = childContainer.style.display !== 'none';
-        childContainer.style.display = isOpen ? 'none' : '';
-        toggleBtn.textContent = isOpen ? '▸' : '▾';
-        toggleBtn.style.opacity = isOpen ? '0.6' : '0.8';
-      });
-
-      const resetBtn = regionItem.querySelector('.reset-btn');
-      resetBtn.insertAdjacentElement('afterend', toggleBtn);
+      appendChildRegions(region, regionItem);
     }
   });
+}
+
+function appendChildRegions(region, regionItem) {
+  const childContainer = document.createElement('div');
+  childContainer.className = 'region-children';
+
+  nestedChildren[region].forEach(childRegion => {
+    const childItem = createRegionItem(childRegion, regionColors[childRegion]);
+    childItem.classList.add('region-child-item');
+    childContainer.appendChild(childItem);
+  });
+
+  childContainer.style.display = 'none';
+  domRefs.regionControl.appendChild(childContainer);
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'toggle-children-btn';
+  toggleBtn.textContent = '▸';
+  toggleBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const isOpen = childContainer.style.display !== 'none';
+    childContainer.style.display = isOpen ? 'none' : '';
+    toggleBtn.textContent = isOpen ? '▸' : '▾';
+    toggleBtn.style.opacity = isOpen ? '0.6' : '0.8';
+  });
+
+  regionItem.querySelector('.reset-btn').insertAdjacentElement('afterend', toggleBtn);
 }
 
 function createRegionItem(region, color) {
