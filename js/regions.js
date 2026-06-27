@@ -2,10 +2,10 @@ export const geoPaths = {
   initial:    { countriesLow: './data/countries-low.geojson' },
   background: {
     countries:         { path: './data/countries.geojson', type: 'polygon' },
-    usaStates:         { path: './data/us_states.geojson', type: 'polygon' },
-    chinaProvinces:    { path: './data/china_provinces.geojson', type: 'polygon' },
-    japanPrefectures:  { path: './data/japan_prefectures.geojson', type: 'polygon' },
-    japanOldProvinces: { path: './data/japan_old_provinces.geojson', type: 'polygon' },
+    usaStates:         { path: './data/us-states.geojson', type: 'polygon' },
+    chinaProvinces:    { path: './data/china-provinces.geojson', type: 'polygon' },
+    japanPrefectures:  { path: './data/japan-prefectures.geojson', type: 'polygon' },
+    japanOldProvinces: { path: './data/japan-old-provinces.geojson', type: 'polygon' },
     dateLine:          { path: './data/international-date-line.geojson', type: 'line' },
   }
 };
