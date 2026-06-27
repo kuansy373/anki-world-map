@@ -197,22 +197,21 @@ function createRegionItem(region, color) {
   const resetBtn = document.createElement('button');
   resetBtn.className = 'reset-btn';
 
-  colorBox.addEventListener('click', e => {
-    e.stopPropagation();
+  regionItem.addEventListener('click', e => e.stopPropagation());
+
+  colorBox.addEventListener('click', () => {
     applyToRegionFeatures(region, (key, fId) => fillFeature(key, fId, color));
     updateProgress(getCurrentRegionQuery());
   });
 
   label.addEventListener('click', e => {
-    e.stopPropagation();
     e.preventDefault();
     const view = regionView[region];
     if (view) map.flyTo({ center: view.center, zoom: view.zoom, speed: 0.8, curve: 1.2, essential: true });
     else alert(`${getRegionDisplayName(region)} ${getMessage('noViewSettings')}`);
   });
 
-  resetBtn.addEventListener('click', e => {
-    e.stopPropagation();
+  resetBtn.addEventListener('click', () => {
     applyToRegionFeatures(region, (key, fId) => clearFeature(key, fId));
     updateProgress(getCurrentRegionQuery());
   });
