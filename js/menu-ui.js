@@ -59,11 +59,15 @@ function setToggleStyle(state) {
   }
 }
 
-function hidePanels() {
+function hideActivePanelDisplay() {
   menuItems.forEach(([btn, panel]) => {
     panel.style.display = 'none';
     btn.classList.remove('active');
   });
+}
+
+function hidePanels() {
+  hideActivePanelDisplay();
   activePanel = null;
   activeBtn   = null;
 }
@@ -99,7 +103,7 @@ function initMenuToggle() {
       outsideClickEnabled = true;
       setMenuVisible(false);
       setToggleStyle('');
-      hidePanels();
+      hideActivePanelDisplay();
     }
   });
 
@@ -107,7 +111,7 @@ function initMenuToggle() {
     if (!outsideClickEnabled) return;
     setMenuVisible(false);
     setToggleStyle('');
-    hidePanels();
+    hideActivePanelDisplay();
   });
 
   menuItems.forEach(([btn, panel]) => {
