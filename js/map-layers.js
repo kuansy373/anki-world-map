@@ -1,4 +1,4 @@
-import { LAYER_ORDER, REGION_TO_SOURCE, ZOOM_LEVELS, themes } from './config.js';
+import { LAYER_ORDER, REGION_TO_SOURCE, GRID_KEYS, ZOOM_LEVELS, themes } from './config.js';
 import { normalize, getRegion, getFeatureId } from './utils.js';
 import { geoPaths } from './regions.js';
 
@@ -15,7 +15,6 @@ export const geojsonData = {};
 export const filledFeatures = {};
 
 const featureIndex = {};
-const GRID_KEYS = ['meridians', 'parallels'];
 
 // ==================
 // フィーチャーインデックス
@@ -221,7 +220,6 @@ function addLineLayer(key, data, visibility = 'none') {
   });
 }
 
-// addLayerFn は addLayer の薄いラッパーだったので直接関数参照に
 const addLayerFn = {
   polygon: addPolygonLayer,
   line:    addLineLayer,
@@ -283,18 +281,6 @@ async function loadInitialData(registerClickEvents) {
   reorderLayers();
   addGridLayers();
   registerClickEvents();
-  registerGridIntervalEvents();
-}
-
-function registerGridIntervalEvents() {
-  const template = document.getElementById('grid-interval-options');
-  GRID_KEYS.forEach(key => {
-    const select = document.getElementById(`${key}-interval`);
-    select.appendChild(template.content.cloneNode(true));
-    select.addEventListener('change', e => {
-      updateGridInterval(key, Number(e.target.value));
-    });
-  });
 }
 
 function loadBackgroundData() {

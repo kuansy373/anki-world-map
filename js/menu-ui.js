@@ -1,7 +1,7 @@
-import { LAYER_ORDER, themes } from './config.js';
+import { LAYER_ORDER, GRID_KEYS, themes } from './config.js';
 import { getRegionDisplayName, getMessage } from './lang.js';
 import { regionColors, regionView } from './regions.js';
-import { fillFeature, clearFeature, applyToRegionFeatures, setLayerVisibility, reorderLayers } from './map-layers.js';
+import { fillFeature, clearFeature, applyToRegionFeatures, setLayerVisibility, reorderLayers, updateGridInterval } from './map-layers.js';
 import { updateProgress } from './progress.js';
 import { getCurrentRegionQuery } from './commands.js';
 
@@ -118,13 +118,22 @@ function initLayersPanel() {
     });
   });
 
-  ['meridians', 'parallels', 'dateLine'].forEach(key => {
+  [...GRID_KEYS, 'dateLine'].forEach(key => {
     const cb = domRefs.layersPanel.querySelector(`#layer_${key}`);
     cb?.addEventListener('change', e => {
       const visibility = e.target.checked ? 'visible' : 'none';
       [`${key}-line`, `${key}-line-hitarea`].forEach(layerId => {
         if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', visibility);
       });
+    });
+  });
+
+  const template = document.getElementById('grid-interval-options');
+  GRID_KEYS.forEach(key => {
+    const select = document.getElementById(`${key}-interval`);
+    select.appendChild(template.content.cloneNode(true));
+    select.addEventListener('change', e => {
+      updateGridInterval(key, Number(e.target.value));
     });
   });
 }

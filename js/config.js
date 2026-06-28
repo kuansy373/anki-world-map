@@ -11,6 +11,8 @@ export const SOURCE_KEY_TO_REGION = Object.fromEntries(
   Object.entries(REGION_TO_SOURCE).map(([region, sourceKey]) => [sourceKey, region])
 );
 
+export const GRID_KEYS = ['meridians', 'parallels'];
+
 export const GEOJSON_REGIONS = {
   ...Object.fromEntries(
     Object.entries(REGION_TO_SOURCE).map(([region, key]) => [
