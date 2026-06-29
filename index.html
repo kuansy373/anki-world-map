@@ -96,21 +96,5 @@
     <!-- メイン -->
     <script type="module" src="js/main.js"></script>
 
-    <!-- キャッシュ制御 -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/oboeru-blank-map/sw.js').then(reg => {
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'activated') {
-                window.location.reload();
-              }
-            });
-          });
-        });
-      }
-    </script>
-
   </body>
 </html>
