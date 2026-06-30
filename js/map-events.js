@@ -16,7 +16,11 @@ const openCountryPopups = new Map();
 // ==================
 
 function isCoveredByUpperLayer(key, point) {
-  const upperLayers = LAYER_ORDER.slice(LAYER_ORDER.indexOf(key) + 1).map(k => `${k}-fill`);
+  const upperLayers = LAYER_ORDER
+    .slice(LAYER_ORDER.indexOf(key) + 1)
+    .map(k => `${k}-fill`)
+    .filter(id => map.getLayer(id));
+  if (upperLayers.length === 0) return false;
   return map.queryRenderedFeatures(point, { layers: upperLayers }).length > 0;
 }
 
@@ -104,7 +108,9 @@ function registerCountryClickEvents() {
   });
 
   map.on('click', e => {
-    const fillLayers = LAYER_ORDER.map(k => `${k}-fill`);
+    const fillLayers = LAYER_ORDER
+        .map(k => `${k}-fill`)
+        .filter(id => map.getLayer(id));
     const features = map.queryRenderedFeatures(e.point, { layers: fillLayers });
     if (features.length === 0) {
       closeAllPopupsExcept();
@@ -183,7 +189,9 @@ function addHighlightLine(uniqueId, highlightFeature, lngLat) {
 }
 
 function registerLineClickEvents() {
-  const topLayers = LAYER_ORDER.flatMap(k => [`${k}-fill`, `${k}-line`]);
+  const topLayers = LAYER_ORDER
+    .flatMap(k => [`${k}-fill`, `${k}-line`])
+    .filter(id => map.getLayer(id));
   ['meridians-line-hitarea', 'parallels-line-hitarea', 'dateLine-line-hitarea'].forEach(layerId => {
     const isDateLine = layerId === 'dateLine-line-hitarea';
 

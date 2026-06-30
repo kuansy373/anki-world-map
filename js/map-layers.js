@@ -144,22 +144,10 @@ export function reorderLayers() {
 // GeoJSONフェッチ・レイヤー追加
 // ==================
 
-function normalizeFeature(f) {
-  if (typeof f.properties.names === 'string') {
-    f.properties.names = JSON.parse(f.properties.names);
-  }
-  return f;
-}
-
 async function fetchGeoJSON(key, path) {
   const res = await fetch(path);
   const data = await res.json();
   geojsonData[key] = data;
-  return { key, data };
-}
-
-function normalizeGeoJSON(data) {
-  data.features.forEach(normalizeFeature);
   return data;
 }
 
@@ -254,6 +242,13 @@ function addGridLayers() {
   GRID_KEYS.forEach(key => addLineLayer(key, gridGenerators[key](10)));
 }
 
+export function setLineLayerVisibility(key, visible) {
+  const visibility = visible ? 'visible' : 'none';
+  [`${key}-line`, `${key}-line-hitarea`].forEach(id => {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visibility);
+  });
+}
+
 // ==================
 // マップ初期化（エントリーポイント）
 // ==================
@@ -270,11 +265,38 @@ function setupStyle(mapContainer) {
   });
 }
 
+// ロード済みかどうかを管理
+const loadedLayers = new Set(['countriesLow', 'countries', ...GRID_KEYS]);
+
+export async function loadLayerOnDemand(key) {
+  const entry = geoPaths.onDemand[key];
+  if (!entry) return;
+
+  if (loadedLayers.has(key)) {
+    entry.type === 'line'
+      ? setLineLayerVisibility(key, true)
+      : setLayerVisibility(key, true);
+    return;
+  }
+
+  try {
+    const data = await fetchGeoJSON(key, entry.path);
+    addLayerFn[entry.type](key, data);
+    buildFeatureIndex(key, data);
+    reorderLayers();
+    entry.type === 'line'
+      ? setLineLayerVisibility(key, true)
+      : setLayerVisibility(key, true);
+    loadedLayers.add(key);
+  } catch (err) {
+    console.error(`${key} のオンデマンドロードに失敗:`, err);
+  }
+}
+
 async function loadInitialData(registerClickEvents) {
   const [, data] = await Promise.all([
     new Promise(resolve => map.on('load', resolve)),
-    fetchGeoJSON('countriesLow', geoPaths.initial.countriesLow)
-      .then(({ data }) => normalizeGeoJSON(data)),
+    fetchGeoJSON('countriesLow', geoPaths.placeholder.path),
   ]);
   addPolygonLayer('countries', data, 'visible');
   buildFeatureIndex('countries', data);
@@ -283,22 +305,14 @@ async function loadInitialData(registerClickEvents) {
   registerClickEvents();
 }
 
-function loadBackgroundData() {
-  Object.entries(geoPaths.background).forEach(([key, { path, type }]) => {
-    fetchGeoJSON(key, path)
-      .then(({ data }) => normalizeGeoJSON(data))
-      .then(data => {
-        if (key === 'countries') {
-          map.getSource('countries').setData(geojsonData.countries);
-          buildFeatureIndex('countries', geojsonData.countries);
-        } else {
-          addLayerFn[type](key, geojsonData[key]);
-          buildFeatureIndex(key, geojsonData[key]);
-        }
-        reorderLayers();
-      })
-      .catch(err => console.error(`${key} のロードに失敗:`, err));
-  });
+function upgradeCountriesData() {
+  fetchGeoJSON('countries', geoPaths.countries.path)
+    .then(data => {
+      map.getSource('countries').setData(data);
+      buildFeatureIndex('countries', data);
+      reorderLayers();
+    })
+    .catch(err => console.error('countries のロードに失敗:', err));
 }
 
 export async function initMapLayers(_map, _mapContainer, _layersPanel, registerClickEvents) {
@@ -308,7 +322,7 @@ export async function initMapLayers(_map, _mapContainer, _layersPanel, registerC
   setupStyle(_mapContainer);
   try {
     await loadInitialData(registerClickEvents);
-    loadBackgroundData();
+    upgradeCountriesData();
   } catch (err) {
     console.error('初期化失敗:', err);
   }

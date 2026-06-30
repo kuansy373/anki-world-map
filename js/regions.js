@@ -1,7 +1,7 @@
 export const geoPaths = {
-  initial:    { countriesLow: './data/countries-low.geojson' },
-  background: {
-    countries:         { path: './data/countries.geojson', type: 'polygon' },
+  placeholder: { key: 'countriesLow', path: './data/countries-low.geojson' },
+  countries:   { path: './data/countries.geojson', type: 'polygon' },
+  onDemand: {
     usaStates:         { path: './data/us-states.geojson', type: 'polygon' },
     chinaProvinces:    { path: './data/china-provinces.geojson', type: 'polygon' },
     japanPrefectures:  { path: './data/japan-prefectures.geojson', type: 'polygon' },

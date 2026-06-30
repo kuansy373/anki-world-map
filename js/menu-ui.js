@@ -1,7 +1,7 @@
 import { LAYER_ORDER, GRID_KEYS, themes } from './config.js';
 import { getRegionDisplayName, getMessage } from './lang.js';
-import { regionColors, regionView } from './regions.js';
-import { fillFeature, clearFeature, applyToRegionFeatures, setLayerVisibility, reorderLayers, updateGridInterval } from './map-layers.js';
+import { regionColors, regionView, geoPaths } from './regions.js';
+import { fillFeature, clearFeature, applyToRegionFeatures, setLayerVisibility, reorderLayers, updateGridInterval, loadLayerOnDemand, setLineLayerVisibility } from './map-layers.js';
 import { updateProgress } from './progress.js';
 import { getCurrentRegionQuery } from './commands.js';
 
@@ -109,22 +109,35 @@ function initMenuToggle() {
 // レイヤーコントロール UI
 // ==================
 
+const lazyKeys = new Set(Object.keys(geoPaths.onDemand));
+
 function initLayersPanel() {
   LAYER_ORDER.forEach(key => {
     const cb = domRefs.layersPanel.querySelector(`#layer_${key}`);
-    cb?.addEventListener('change', e => {
-      setLayerVisibility(key, e.target.checked);
-      reorderLayers();
+    if (!cb) return;
+
+    cb.addEventListener('change', e => {
+      if (lazyKeys.has(key)) {
+        if (e.target.checked) {
+          loadLayerOnDemand(key);
+        } else {
+          setLayerVisibility(key, false);
+        }
+      } else {
+        setLayerVisibility(key, e.target.checked);
+        reorderLayers();
+      }
     });
   });
 
   [...GRID_KEYS, 'dateLine'].forEach(key => {
     const cb = domRefs.layersPanel.querySelector(`#layer_${key}`);
     cb?.addEventListener('change', e => {
-      const visibility = e.target.checked ? 'visible' : 'none';
-      [`${key}-line`, `${key}-line-hitarea`].forEach(layerId => {
-        if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', visibility);
-      });
+      if (e.target.checked && lazyKeys.has(key)) {
+        loadLayerOnDemand(key);
+      } else {
+        setLineLayerVisibility(key, e.target.checked);
+      }
     });
   });
 
