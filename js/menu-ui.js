@@ -1,7 +1,7 @@
-import { LAYER_ORDER, GRID_KEYS, themes } from './config.js';
+import { LAYER_KEYS, DYNAMIC_FRONT_KEYS, GRID_KEYS, themes } from './config.js';
 import { getRegionDisplayName, getMessage } from './lang.js';
 import { regionColors, regionView, geoPaths } from './regions.js';
-import { fillFeature, clearFeature, applyToRegionFeatures, setLayerVisibility, reorderLayers, updateGridInterval, loadLayerOnDemand, setLineLayerVisibility } from './map-layers.js';
+import { fillFeature, clearFeature, applyToRegionFeatures, setLayerVisibility, reorderLayers, bringLayerToFront, updateGridInterval, loadLayerOnDemand, setLineLayerVisibility } from './map-layers.js';
 import { updateProgress } from './progress.js';
 import { getCurrentRegionQuery } from './commands.js';
 
@@ -112,7 +112,7 @@ function initMenuToggle() {
 const lazyKeys = new Set(Object.keys(geoPaths.onDemand));
 
 function initLayersPanel() {
-  LAYER_ORDER.forEach(key => {
+  LAYER_KEYS.forEach(key => {
     const cb = domRefs.layersPanel.querySelector(`#layer_${key}`);
     if (!cb) return;
 
@@ -125,8 +125,12 @@ function initLayersPanel() {
         }
       } else {
         setLayerVisibility(key, e.target.checked);
-        reorderLayers();
       }
+
+      if (e.target.checked && DYNAMIC_FRONT_KEYS.includes(key)) {
+        bringLayerToFront(key);
+      }
+      reorderLayers();
     });
   });
 

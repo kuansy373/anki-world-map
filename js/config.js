@@ -1,4 +1,14 @@
-export const LAYER_ORDER = ['countries', 'usaStates', 'chinaProvinces', 'japanPrefectures', 'japanOldProvinces'];
+export const LAYER_Z_INDEX = {
+  countries:         0,
+  usaStates:         1,
+  chinaProvinces:    1,
+  japanPrefectures:  1,
+  japanOldProvinces: 1,
+};
+
+export const LAYER_KEYS = Object.keys(LAYER_Z_INDEX);
+
+export const DYNAMIC_FRONT_KEYS = ['japanPrefectures', 'japanOldProvinces'];
 
 export const REGION_TO_SOURCE = {
   'USA States':        'usaStates',

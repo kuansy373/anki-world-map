@@ -1,8 +1,8 @@
-import { LAYER_ORDER } from './config.js';
+import { LAYER_KEYS } from './config.js';
 import { getFeatureId, getRegion } from './utils.js';
 import { getDisplayName, getRegionDisplayName } from './lang.js';
 import { regionColors } from './regions.js';
-import { geojsonData, filledFeatures, fillFeature, clearFeature } from './map-layers.js';
+import { geojsonData, filledFeatures, fillFeature, clearFeature, getCurrentLayerOrder } from './map-layers.js';
 
 // maplibregl → CDN（グローバル）
 
@@ -16,8 +16,9 @@ const openCountryPopups = new Map();
 // ==================
 
 function isCoveredByUpperLayer(key, point) {
-  const upperLayers = LAYER_ORDER
-    .slice(LAYER_ORDER.indexOf(key) + 1)
+  const order = getCurrentLayerOrder();
+  const upperLayers = order
+    .slice(order.indexOf(key) + 1)
     .map(k => `${k}-fill`)
     .filter(id => map.getLayer(id));
   if (upperLayers.length === 0) return false;
@@ -95,7 +96,7 @@ function closeAllPopupsExcept(excludeId = null) {
 }
 
 function registerCountryClickEvents() {
-  LAYER_ORDER.forEach(key => {
+  LAYER_KEYS.forEach(key => {
     map.on('click', `${key}-fill`, e => {
       if (isCoveredByUpperLayer(key, e.point)) return;
       const featureId = getFeatureId(e.features[0]);
@@ -108,7 +109,7 @@ function registerCountryClickEvents() {
   });
 
   map.on('click', e => {
-    const fillLayers = LAYER_ORDER
+    const fillLayers = LAYER_KEYS
         .map(k => `${k}-fill`)
         .filter(id => map.getLayer(id));
     const features = map.queryRenderedFeatures(e.point, { layers: fillLayers });
@@ -189,7 +190,7 @@ function addHighlightLine(uniqueId, highlightFeature, lngLat) {
 }
 
 function registerLineClickEvents() {
-  const topLayers = LAYER_ORDER
+  const topLayers = LAYER_KEYS
     .flatMap(k => [`${k}-fill`, `${k}-line`])
     .filter(id => map.getLayer(id));
   ['meridians-line-hitarea', 'parallels-line-hitarea', 'dateLine-line-hitarea'].forEach(layerId => {

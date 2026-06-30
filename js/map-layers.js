@@ -1,4 +1,4 @@
-import { LAYER_ORDER, REGION_TO_SOURCE, GRID_KEYS, ZOOM_LEVELS, themes } from './config.js';
+import { LAYER_Z_INDEX, LAYER_KEYS, REGION_TO_SOURCE, GRID_KEYS, ZOOM_LEVELS, themes } from './config.js';
 import { normalize, getRegion, getFeatureId } from './utils.js';
 import { geoPaths } from './regions.js';
 
@@ -29,7 +29,7 @@ export function buildFeatureIndex(key, data) {
   featureIndex[key] = index;
 }
 
-export function findFeatureById(id, sources = LAYER_ORDER) {
+export function findFeatureById(id, sources = LAYER_KEYS) {
   const n = normalize(id);
   for (const sourceKey of sources) {
     const feature = featureIndex[sourceKey]?.get(n);
@@ -58,7 +58,7 @@ export function clearFeature(key, featureId) {
 }
 
 export function applyToRegionFeatures(region, callback) {
-  LAYER_ORDER.forEach(key => {
+  LAYER_KEYS.forEach(key => {
     const data = geojsonData[key];
     if (!data?.features) return;
     data.features.forEach(f => {
@@ -136,8 +136,19 @@ export function setLayerVisibility(key, visible) {
   forEachLayerId(key, id => map.setLayoutProperty(id, 'visibility', visibility));
 }
 
+export function getCurrentLayerOrder() {
+  return Object.entries(LAYER_Z_INDEX)
+    .sort(([, a], [, b]) => a - b)
+    .map(([key]) => key);
+}
+
 export function reorderLayers() {
-  LAYER_ORDER.forEach(key => forEachLayerId(key, id => map.moveLayer(id)));
+  getCurrentLayerOrder().forEach(key => forEachLayerId(key, id => map.moveLayer(id)));
+}
+
+export function bringLayerToFront(key) {
+  const maxZ = Math.max(...Object.values(LAYER_Z_INDEX));
+  LAYER_Z_INDEX[key] = maxZ + 1;
 }
 
 // ==================
