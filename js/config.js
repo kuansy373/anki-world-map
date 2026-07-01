@@ -1,5 +1,6 @@
 export const LAYER_Z_INDEX = {
   countries:         0,
+  antarctica:        1,
   usaStates:         1,
   chinaProvinces:    1,
   japanPrefectures:  1,
@@ -11,6 +12,7 @@ export const LAYER_KEYS = Object.keys(LAYER_Z_INDEX);
 export const DYNAMIC_FRONT_KEYS = ['japanPrefectures', 'japanOldProvinces'];
 
 export const REGION_TO_SOURCE = {
+  'Antarctica':        'antarctica',
   'USA States':        'usaStates',
   'China Provinces':   'chinaProvinces',
   'Japan Prefectures': 'japanPrefectures',

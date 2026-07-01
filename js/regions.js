@@ -2,6 +2,7 @@ export const geoPaths = {
   placeholder: { key: 'countriesLow', path: './data/countries-low.geojson' },
   countries:   { path: './data/countries.geojson', type: 'polygon' },
   onDemand: {
+    antarctica:        { path: './data/antarctica.geojson', type: 'polygon' },
     usaStates:         { path: './data/us-states.geojson', type: 'polygon' },
     chinaProvinces:    { path: './data/china-provinces.geojson', type: 'polygon' },
     japanPrefectures:  { path: './data/japan-prefectures.geojson', type: 'polygon' },
@@ -154,12 +155,10 @@ export const countryRegions = {
     'SR',
     'UY',
     'VE'
-  ],
-  Antarctica: [
-    'AQ'
   ]
 };
 
+countryRegions['Antarctica'] = [];
 countryRegions['USA States'] = [];
 countryRegions['China Provinces'] = [];
 countryRegions['Japan Prefectures'] = [];
