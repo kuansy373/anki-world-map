@@ -22,7 +22,7 @@ SOFTWARE.
 
 Note: The MIT License above does not apply to `data/japan_old_provinces.geojson.geojson`, which is
 derived from data licensed under CC BY-NC (Non-Commercial). That file may NOT
-be used for commercial purposes. See "4. Geo data -3. Japan Old Provinces" below.
+be used for commercial purposes. See "3. Geo data -3. Japan Old Provinces" below.
 
 ---
 
@@ -36,17 +36,12 @@ The following third-party components are included under their respective license
      - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js
      - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css
 
-2. MapLibre Demo Fonts
-   - License: BSD-3-Clause License (as distributed via demotiles.maplibre.org)
-   - Source: https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf
-   - Provided by MapLibre project for demonstration purposes
-
-3. Turf.js
+2. Turf.js
    - MIT License
    - Copyright (c) 2019 Morgan Herlocker
    - https://github.com/Turfjs/turf/blob/master/LICENSE
 
-4. Geo data
+3. Geo data
 
    -1. geo-countries
       - All data is licensed under the Open Data Commons Public Domain Dedication and License.

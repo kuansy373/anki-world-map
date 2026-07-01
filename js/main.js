@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
       version: 8,
       sources: {},
       layers: [],
-      glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
     },
     center: [0, 20],
     zoom: 1,
