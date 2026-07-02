@@ -191,6 +191,10 @@ body {
   font-size: 18px;
 }
 
+#menu-toggle.open {
+  border-style: double;
+}
+
 #menu-top {
   display: flex;
   flex-direction: row;
@@ -215,8 +219,8 @@ body {
   text-align: left;
 }
 
-#menu-top button.active,
-#menu-bottom button.active {
+#menu-container button.active,
+#menu-toggle.locked {
   border-color: #ccc;
   border-radius: 3px;
   border-style: groove;

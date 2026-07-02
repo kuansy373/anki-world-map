@@ -31,17 +31,14 @@ function setMenuVisible(visible) {
 }
 
 function setToggleStyle(state) {
+  const btn = domRefs.menuToggle;
+  btn.classList.remove('open', 'locked');
   if (state === 'open') {
-    domRefs.menuToggle.style.border = '';
-    domRefs.menuToggle.style.borderStyle = 'double';
+    btn.classList.add('open');
   } else if (state === 'locked') {
-    domRefs.menuToggle.style.border = '2px groove #e0dfdf';
-    domRefs.menuToggle.textContent = '✕';
-  } else {
-    domRefs.menuToggle.style.border = '';
-    domRefs.menuToggle.style.borderStyle = '';
-    domRefs.menuToggle.textContent = '☰';
+    btn.classList.add('locked');
   }
+  btn.textContent = state === 'locked' ? '✕' : '☰';
 }
 
 function hideActivePanelDisplay() {
