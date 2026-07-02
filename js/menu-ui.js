@@ -1,4 +1,4 @@
-import { LAYER_KEYS, DYNAMIC_FRONT_KEYS, GRID_KEYS, themes } from './config.js';
+import { LAYER_KEYS, DYNAMIC_FRONT_KEYS, GRID_KEYS, REGION_TO_SOURCE, SOURCE_KEY_TO_REGION, themes } from './config.js';
 import { getRegionDisplayName, getMessage } from './lang.js';
 import { regionColors, regionView, geoPaths } from './regions.js';
 import { fillFeature, clearFeature, applyToRegionFeatures, setLayerVisibility, reorderLayers, bringLayerToFront, updateGridInterval, loadLayerOnDemand, setLineLayerVisibility } from './map-layers.js';
@@ -120,6 +120,7 @@ function initLayersPanel() {
       if (lazyKeys.has(key)) {
         if (e.target.checked) {
           await loadLayerOnDemand(key);
+          addLazyRegionItem(SOURCE_KEY_TO_REGION[key]);
           updateProgress(getCurrentRegionQuery());
         } else {
           setLayerVisibility(key, false);
@@ -156,6 +157,34 @@ function initLayersPanel() {
   });
 }
 
+function isLazyRegion(region) {
+  const sourceKey = REGION_TO_SOURCE[region];
+  return sourceKey ? lazyKeys.has(sourceKey) : false;
+}
+
+function addLazyRegionItem(region) {
+  if (!region || !regionColors[region]) return;
+  if (domRefs.regionControl.querySelector(`.region-item[data-region="${region}"]`)) return;
+
+  const regionItem = createRegionItem(region, regionColors[region]);
+
+  const parentRegion = Object.entries(nestedChildren)
+    .find(([, children]) => children.includes(region))?.[0];
+
+  if (parentRegion) {
+    regionItem.classList.add('region-child-item');
+    const parentItem = domRefs.regionControl.querySelector(`.region-item[data-region="${parentRegion}"]`);
+    const childContainer = parentItem?.nextElementSibling;
+
+    if (childContainer) {
+      childContainer.appendChild(regionItem);
+      addToggleButton(parentItem, childContainer)
+    }
+  } else {
+    domRefs.regionControl.appendChild(regionItem);
+  }
+}
+
 // ==================
 // 地域コントロール UI
 // ==================
@@ -172,6 +201,7 @@ export function buildRegionControl() {
 
   Object.entries(regionColors).forEach(([region, color]) => {
     if (childRegions.has(region)) return;
+    if (isLazyRegion(region)) return;
 
     const regionItem = createRegionItem(region, color);
     domRefs.regionControl.appendChild(regionItem);
@@ -187,6 +217,8 @@ function appendChildRegions(region, regionItem) {
   childContainer.className = 'region-children';
 
   nestedChildren[region].forEach(childRegion => {
+    if (isLazyRegion(childRegion)) return;
+
     const childItem = createRegionItem(childRegion, regionColors[childRegion]);
     childItem.classList.add('region-child-item');
     childContainer.appendChild(childItem);
@@ -194,6 +226,14 @@ function appendChildRegions(region, regionItem) {
 
   childContainer.style.display = 'none';
   domRefs.regionControl.appendChild(childContainer);
+
+  if (childContainer.children.length > 0) {
+    addToggleButton(regionItem, childContainer);
+  }
+}
+
+function addToggleButton(regionItem, childContainer) {
+  if (regionItem.querySelector('.toggle-children-btn')) return;
 
   const toggleBtn = document.createElement('button');
   toggleBtn.className = 'toggle-children-btn';
