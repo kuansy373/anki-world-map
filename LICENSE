@@ -20,49 +20,198 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Note: The MIT License above does not apply to `data/japan_old_provinces.geojson.geojson`, which is
-derived from data licensed under CC BY-NC (Non-Commercial). That file may NOT
-be used for commercial purposes. See "3. Geo data -3. Japan Old Provinces" below.
+Note: The MIT License above does not apply to `data/japan_old_provinces.geojson`,
+which is derived from data licensed under CC BY-NC. Commercial use of that file is not
+permitted without prior consultation with the data provider. See
+"3. Geo data -4. Japan Old Provinces" below for details.
 
----
+================================================================================
+The following third-party software and data are included in this project.
+Applicable license texts and notices are provided below.
+================================================================================
 
-The following third-party components are included under their respective licenses.
-
+--------------------------------------------------------------------------------
 1. MapLibre GL JS
-   - BSD-3-Clause license
-   - Copyright (c) 2023, MapLibre contributors
-   - https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt
-   - Files used:
-     - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js
-     - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css
+--------------------------------------------------------------------------------
+Files used (loaded via CDN, not bundled or hosted in this repository):
+  - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js
+  - https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css
+Source: https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt
 
+Copyright (c) 2023, MapLibre contributors
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of MapLibre GL JS nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-------------------------------------------------------------------------------
+
+Contains code from mapbox-gl-js v1.13 and earlier
+
+Version v1.13 of mapbox-gl-js and earlier are licensed under a BSD-3-Clause license
+
+Copyright (c) 2020, Mapbox
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+* Neither the name of Mapbox GL JS nor the names of its contributors
+  may be used to endorse or promote products derived from this software
+  without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+-------------------------------------------------------------------------------
+
+Contains code from glfx.js
+
+Copyright (C) 2011 by Evan Wallace
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+Contains a portion of d3-color https://github.com/d3/d3-color
+
+Copyright 2010-2016 Mike Bostock
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the author nor the names of contributors may be used to
+  endorse or promote products derived from this software without specific prior
+  written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
 2. Turf.js
-   - MIT License
-   - Copyright (c) 2019 Morgan Herlocker
-   - https://github.com/Turfjs/turf/blob/master/LICENSE
+--------------------------------------------------------------------------------
+File used (loaded via CDN, not bundled or hosted in this repository):
+  - https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js
+Source: https://github.com/Turfjs/turf/blob/master/LICENSE
 
+The MIT License (MIT)
+
+Copyright (c) 2019 Morgan Herlocker
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------
 3. Geo data
+--------------------------------------------------------------------------------
 
-   -1. geo-countries
+   3-1. geo-countries
       - All data is licensed under the Open Data Commons Public Domain Dedication and License.
       - https://github.com/datasets/geo-countries
 
-   -2. Administrative divisions
+   3-2. Administrative divisions
       - Public Domain (Natural Earth)
       - https://github.com/nvkelso/natural-earth-vector
       - Source: ne_10m_admin_1_states_provinces.geojson
 
-   -3. Japan Old Provinces
-      - License: CC BY-NC
-      - Provider: Inter-university Research Institute Corporation, National Institutes for the Humanities (NIHU)
-      - Source: "Bakumatsu-Meiji Boundary Data" (幕末明治地勢地図境界データ)
-      - https://www.bridge.nihu.jp/researchdata/file/18045150
-      - Converted from SHP to GeoJSON using GDAL/ogr2ogr (MIT License, https://gdal.org)
-      - Simplified using Mapshaper (https://mapshaper.org)
-      - Coordinates rounded to 6 decimal places
-      - Non-commercial use only
-
-   -4. Natural Earth (International Date Line)
+   3-3. Natural Earth (International Date Line)
       - Public Domain
       - https://www.naturalearthdata.com/
       - Source: ne_110m_geographic_lines
+
+   3-4. Japan Old Provinces
+      - License: CC BY-NC (specific version not indicated by the provider;
+        see https://creativecommons.org/licenses/by-nc/ for the license family)
+      - Credit (as specified by the provider):
+        人間文化研究機構, https://www.bridge.nihu.jp/researchdata/file/18045150
+        (National Institutes for the Humanities (NIHU),
+        https://www.bridge.nihu.jp/researchdata/file/18045150)
+      - Title: "Bakumatsu-Meiji Boundary Data" (幕末明治地勢地図境界データ)
+      - Commercial use: not permitted without prior consultation with the provider
+      - Converted from SHP to GeoJSON using GDAL/ogr2ogr (a build-time tool only;
+        no GDAL code is redistributed in this repository) - https://gdal.org
+      - Simplified using Mapshaper (a build-time tool only; not redistributed) -
+        https://mapshaper.org
+      - Coordinates rounded to 6 decimal places
